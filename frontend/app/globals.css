@@ -1,0 +1,468 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------------
+   Adaptive RAG — design tokens ("Sounding" palette). See DESIGN_PLAN.md §2.
+   ------------------------------------------------------------------------ */
+
+@theme {
+  /* surfaces & ink */
+  --color-abyss: #0a2327;
+  --color-trench: #0f2e33;
+  --color-reef: #143a40;
+  --color-shelf: #1f4b51;
+  --color-murk: #4e7470;
+  --color-kelp: #86a9a4;
+  --color-foam: #e6f2ee;
+
+  /* signals */
+  --color-rhodamine: #ff6b93;
+  --color-sodium: #ffc14d;
+  --color-glacier: #8fcbff;
+  --color-flare: #ff8a7a;
+
+  /* data-viz slots: S, R, C, I (validated, dark, on trench) */
+  --color-viz-s: #c18500;
+  --color-viz-r: #2fa284;
+  --color-viz-c: #3a80c8;
+  --color-viz-i: #d95479;
+
+  --radius-chip: 6px;
+  --radius-control: 10px;
+  --radius-panel: 16px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+
+  --breakpoint-xs: 30rem;
+}
+
+@theme inline {
+  --font-display: var(--font-anybody), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-recursive), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-recursive), ui-monospace, monospace;
+}
+
+/* Variable-font axes driven by inherited custom properties, so any element can
+   flex width (Anybody) or morph mono→sans (Recursive) — and motion can tween them. */
+@property --mono {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --casl {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+@property --wdth {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 100;
+}
+
+/* ------------------------------------------------------------------------ */
+@layer base {
+  html {
+    color-scheme: dark;
+    background-color: var(--color-abyss);
+    color: var(--color-foam);
+    font-family: var(--font-sans);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  *,
+  *::before,
+  *::after {
+    font-variation-settings:
+      "MONO" var(--mono),
+      "CASL" var(--casl),
+      "CRSV" 0,
+      "wdth" var(--wdth);
+  }
+
+  body {
+    min-height: 100dvh;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background:
+      radial-gradient(110% 70% at 78% -12%, #103439 0%, transparent 62%),
+      radial-gradient(70% 55% at -8% 108%, #0c2b30 0%, transparent 60%),
+      var(--color-abyss);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-sodium) 38%, transparent);
+    color: var(--color-foam);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-sodium);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-shelf) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-shelf);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Type
+   ------------------------------------------------------------------------ */
+@utility t-display-xl {
+  font-family: var(--font-anybody), sans-serif;
+  font-size: clamp(3.25rem, 8.4vw, 8.25rem);
+  line-height: 0.9;
+  font-weight: 740;
+  letter-spacing: -0.035em;
+}
+@utility t-display-l {
+  font-family: var(--font-anybody), sans-serif;
+  font-size: clamp(2.25rem, 4.3vw, 4rem);
+  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+@utility t-display-m {
+  font-family: var(--font-anybody), sans-serif;
+  font-size: clamp(1.625rem, 2.4vw, 2.25rem);
+  line-height: 1;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+}
+@utility t-body-l {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+@utility t-stat {
+  font-family: var(--font-recursive), sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@utility mono {
+  font-family: var(--font-recursive), monospace;
+  --mono: 1;
+}
+@utility sans {
+  font-family: var(--font-recursive), sans-serif;
+  --mono: 0;
+}
+@utility label {
+  font-family: var(--font-recursive), monospace;
+  --mono: 1;
+  font-size: 0.6875rem;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-kelp);
+}
+@utility data {
+  font-family: var(--font-recursive), monospace;
+  --mono: 1;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+}
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------
+   Surfaces
+   ------------------------------------------------------------------------ */
+@utility panel {
+  background: color-mix(in oklab, var(--color-trench) 86%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-shelf) 80%, transparent);
+  border-radius: var(--radius-panel);
+}
+@utility hairline {
+  border-color: color-mix(in oklab, var(--color-shelf) 80%, transparent);
+}
+@utility ring-signal {
+  box-shadow:
+    0 0 0 1px var(--signal, var(--color-sodium)),
+    0 0 24px color-mix(in oklab, var(--signal, var(--color-sodium)) 18%, transparent);
+}
+
+/* Film grain: keeps flat surfaces from looking digital-flat. */
+.grain {
+  pointer-events: none;
+  position: fixed;
+  inset: -50%;
+  z-index: 90;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+@media (forced-colors: active) {
+  .grain {
+    display: none;
+  }
+}
+
+/* Range sliders (weights). --c = signal colour, --p = filled percentage. */
+input[type="range"].range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"].range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--c) 0 var(--p),
+    color-mix(in oklab, var(--color-shelf) 80%, transparent) var(--p) 100%
+  );
+}
+input[type="range"].range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 999px;
+  background: var(--color-abyss);
+  border: 2px solid var(--c);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--c) 20%, transparent);
+  transition: transform 0.15s var(--ease-out);
+}
+input[type="range"].range:active::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+input[type="range"].range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-shelf) 80%, transparent);
+}
+input[type="range"].range::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--c);
+}
+input[type="range"].range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  background: var(--color-abyss);
+  border: 2px solid var(--c);
+}
+input[type="range"].range:focus-visible {
+  outline: none;
+}
+input[type="range"].range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-sodium);
+  outline-offset: 2px;
+}
+input[type="range"].range:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* Labels the terrain renderer positions over its peaks (created imperatively). */
+.terrain-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 7px;
+  font-family: var(--font-recursive), monospace;
+  --mono: 1;
+  font-size: 10.5px;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: var(--color-foam);
+  background: color-mix(in oklab, var(--color-abyss) 84%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-shelf) 95%, transparent);
+  border-radius: 999px;
+  opacity: 0;
+  transition: opacity 0.22s var(--ease-out);
+  will-change: transform;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.terrain-label::after {
+  content: "";
+  position: absolute;
+  left: var(--lx, 50%);
+  top: 100%;
+  width: 1px;
+  height: var(--lh, 11px);
+  background: linear-gradient(to bottom, color-mix(in oklab, var(--color-foam) 55%, transparent), transparent);
+}
+.terrain-label i {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--color-glacier);
+}
+.terrain-label[data-kind="memory"] i {
+  background: var(--color-rhodamine);
+}
+.terrain-label[data-kind="ghost"] {
+  color: var(--color-kelp);
+}
+.terrain-label[data-kind="ghost"] i {
+  background: transparent;
+  outline: 1px dashed var(--color-kelp);
+  outline-offset: -1px;
+}
+.terrain-label[data-tone="hit"] {
+  border-color: color-mix(in oklab, var(--color-sodium) 65%, transparent);
+}
+.terrain-label[data-tone="new"] {
+  border-color: color-mix(in oklab, var(--color-rhodamine) 65%, transparent);
+}
+
+/* Shimmer for the "thinking" state (only moves when motion is allowed). */
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes caret {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.animate-breathe {
+  animation: breathe 1.4s var(--ease-in-out) infinite;
+}
+@keyframes packet-h {
+  0% {
+    left: 0%;
+    top: -2.5px;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 6px);
+    top: -2.5px;
+    opacity: 0;
+  }
+}
+@keyframes packet-v {
+  0% {
+    top: 0%;
+    left: -2.5px;
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    top: calc(100% - 6px);
+    left: -2.5px;
+    opacity: 0;
+  }
+}
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+@keyframes underline-in {
+  from {
+    text-decoration-color: transparent;
+  }
+}
+.underline-in {
+  animation: underline-in 0.5s var(--ease-out) both;
+}
+.is-streaming > div > p:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 0.5ch;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--color-sodium);
+  animation: caret 0.9s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
