@@ -15,17 +15,18 @@ All the learning lives in SQLite and the ranking weights. The LLM is never train
 
 ## Status
 
-- ✅ **Backend in `backend/`: built and tested.**
-  - 36 tests pass (`pytest tests`).
+- ✅ **Backend in `backend/`: built, tested and committed** (branch `backend-rag-1no7rc`).
+  - 42 tests pass (`pytest tests`).
   - A parity test replays a 14-message script, plus feedback, a document upload and a clock jump, and gets exactly the same decisions, rankings and answers as the frontend's TypeScript engine.
   - The real stack (MiniLM, Chroma and the trained classifier) runs the 9-step demo.
+- ✅ **Claude integration.** Defaults to `claude-opus-5-5` (the classifier uses the same model unless `ANTHROPIC_CLASSIFIER_MODEL` is set), `effort: "low"`, server-side refusal fallbacks (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`), streaming `max_tokens` 64000 and 16000 for structured output. `LLM_PROVIDER=anthropic` works without a key via an `ant auth login` profile. API errors are logged as one readable line. Old `[n]` markers are stripped from the history the model sees. A saved database that no longer validates is wiped and reseeded.
 - ✅ **Memory classifier** (`python -m ml.train_classifier`).
   - Rules baseline: 39/40 on the 40 held-out sentences.
   - TF-IDF + logistic regression: 40/40, with 5-fold CV macro-F1 of 0.88 on 220 training sentences.
   - The held-out set is small, so quote the CV figure.
-- ⛔ **Frontend live mode is NOT wired yet.** The steps are below.
-- ⛔ **Not done yet:** a review pass over the backend, updating the root `README.md`, and committing (nothing is committed).
-- ⚠️ **`frontend/package.json` now says `eslint-config-next: ^14.2.35`.** It was 16.3.8. That edit isn't mine, and it doesn't match Next 16, so ESLint may fail until it's set back.
+- ✅ **Frontend live mode is wired** (all 9 steps below). Verified end to end with headless Chromium against uvicorn (`EMBEDDER=hash`): the 9-step script, citation chips while streaming, feedback and its 409, the clock jump expiring the exam memory, sample ingest, pin and delete, the retrieval lab and both classifier evaluations — with no browser console errors. `tsc`, ESLint and `next build` pass.
+- ⚠️ **No LLM has been run live.** The Claude and OpenAI-compatible clients are tested over mocked HTTP only; the E2E run used template answers.
+- ⚠️ **`frontend/package.json` says `eslint-config-next: ^14.2.35`** while Next is 16.3.8. With it, `npm install` fails (ERESOLVE: eslint 9) unless you pass `--legacy-peer-deps`, and `npx eslint` then fails to load `eslint-config-next/core-web-vitals`. Setting it back to `16.3.8` fixes both; it was left as is because the change came from the v2 commit.
 
 ## Run it
 
@@ -43,7 +44,7 @@ To point the frontend at it, put `NEXT_PUBLIC_API_URL=http://localhost:8000` in 
 
 - **First start** downloads all-MiniLM-L6-v2, about 90 MB. Later starts take about 10 s.
 - **LLM choice:**
-  - Claude: `claude-sonnet-5-5` with `effort: "low"` and a cached system prompt, about $0.01 per turn. Haiku 4.5 handles the optional LLM classifier.
+  - Claude: `claude-opus-5-5` with `effort: "low"`, a cached system prompt and refusal fallbacks. Set `ANTHROPIC_API_KEY`, or `LLM_PROVIDER=anthropic` after `ant auth login`. Set `ANTHROPIC_CLASSIFIER_MODEL` to use a different model for `CLASSIFIER=llm`.
   - Free and local: Ollama through `OPENAI_BASE_URL=http://localhost:11434/v1`.
   - None: template answers.
 
@@ -87,9 +88,9 @@ The `ml/` folder is for training, `seed/` holds the corpus, eval set and trainin
 | `POST /api/reset` | Restores the seeded demo. |
 | `GET /api/health` | Shows which answer model, classifier, embedder and vector store are active. |
 
-## Next: wire the frontend live mode (`frontend/lib/store.ts`, `lib/api/live.ts`)
+## Frontend live mode (done — `frontend/lib/store.ts`, `lib/api/live.ts`)
 
-Mutations in live mode currently stay local and get overwritten by the next state fetch.
+What was implemented, step by step:
 
 1. **`live.ts`.** Add `reset`, `ingestSample`, `retrieve`, `classify`, `classifierEval` and `health`. Send `label` with the weights. Send the client turn ids in `streamChat`. Add `patch` to `ChatEvent`.
 2. **One `applyServerWorld(server)` helper** in the store.
@@ -110,4 +111,4 @@ Mutations in live mode currently stay local and get overwritten by the next stat
 8. **`ClassifierPlayground`.** In live mode, call `/api/classify` (debounced) and `/api/classifier/eval`. Adapt `confusion[][]` and `{expected, got}` to the component's shape. Add a toggle between "Rules" and "Trained model".
 9. **Optional.** `StatusStrip` could show the answer model from `/api/health`.
 
-The contract audit (field-by-field, with file:line references) was saved during the session at `…/scratchpad/contract.md`. That path is session-temporary, so the list above captures what matters from it.
+Live-mode details worth knowing: `applyServerWorld` keeps the client's `scriptDone` (except on reset) and any failed turns the server rolled back; events are toasted only when their ids are new; the client clock is `serverNow - Date.now()`. `StoreHydrator` refreshes on load (no toasts) and every 20 s while idle.
