@@ -1,15 +1,28 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
-import type { MemoryClass } from "@/lib/engine/types";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import type { Classification, MemoryClass } from "@/lib/engine/types";
 import { CLASSES } from "@/lib/engine/types";
 import { classify } from "@/lib/engine/classify";
 import { createWorld } from "@/lib/engine/seed";
 import { EVAL_SET } from "@/lib/engine/evalset";
 import { ProbabilityBars } from "@/components/console/ClassifierStrip";
 import { CLASS_LABEL, Glyph } from "@/components/ui/Glyph";
+import { Segmented } from "@/components/ui/Segmented";
 import { cx } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { LIVE, live } from "@/lib/api/live";
+import type { ClassifierEval } from "@/lib/api/live";
+
+type Predictor = "rules" | "ml";
+
+interface EvalView {
+  m: Record<MemoryClass, Record<MemoryClass, number>>;
+  accuracy: number;
+  macroF1: number;
+  misses: { text: string; actual: MemoryClass; predicted: MemoryClass }[];
+  n: number;
+}
 
 const EXAMPLES = [
   "My name is Harsh.",
@@ -20,7 +33,24 @@ const EXAMPLES = [
   "Actually, your previous answer was wrong.",
 ];
 
-function evaluate() {
+function emptyMatrix() {
+  return Object.fromEntries(CLASSES.map((a) => [a, Object.fromEntries(CLASSES.map((b) => [b, 0]))])) as Record<MemoryClass, Record<MemoryClass, number>>;
+}
+
+/** The backend's confusion[][] (rows = true, in `classes` order) → this component's shape. */
+function fromServer(r: ClassifierEval): EvalView {
+  const m = emptyMatrix();
+  r.classes.forEach((a, i) => r.classes.forEach((b, j) => (m[a][b] = r.confusion[i]?.[j] ?? 0)));
+  return {
+    m,
+    accuracy: r.accuracy,
+    macroF1: r.macroF1,
+    misses: r.misses.map((x) => ({ text: x.text, actual: x.expected, predicted: x.got })),
+    n: r.total,
+  };
+}
+
+function evaluate(): EvalView {
   const w = createWorld(Date.now());
   const m: Record<MemoryClass, Record<MemoryClass, number>> = Object.fromEntries(
     CLASSES.map((a) => [a, Object.fromEntries(CLASSES.map((b) => [b, 0]))]),
@@ -43,8 +73,33 @@ function evaluate() {
   return { m, accuracy: correct / EVAL_SET.length, macroF1: f1s.reduce((a, b) => a + b, 0) / f1s.length, misses, n: EVAL_SET.length };
 }
 
-function ConfusionMatrix() {
-  const r = useMemo(() => evaluate(), []);
+function ConfusionMatrix({ predictor }: { predictor: Predictor }) {
+  const local = useMemo(() => (LIVE ? null : evaluate()), []);
+  const [server, setServer] = useState<{ predictor: Predictor; view: EvalView } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!LIVE) return;
+    let stale = false;
+    live
+      .classifierEval(predictor)
+      .then((r) => {
+        if (stale) return;
+        setServer({ predictor, view: fromServer(r) });
+        setError(null);
+      })
+      .catch((e) => !stale && setError(e instanceof Error ? e.message : String(e)));
+    return () => {
+      stale = true;
+    };
+  }, [predictor]);
+  const r = LIVE ? (server?.predictor === predictor ? server.view : null) : local;
+  if (!r) {
+    return (
+      <p className="text-[12.5px] text-kelp" aria-busy={!error}>
+        {error ? `Couldn’t load the evaluation: ${error}` : "Scoring the held-out sentences…"}
+      </p>
+    );
+  }
   return (
     <figure className="m-0">
       <figcaption className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -103,7 +158,7 @@ function ConfusionMatrix() {
               “{x.text}” ({CLASS_LABEL[x.actual].toLowerCase()} → {CLASS_LABEL[x.predicted].toLowerCase()}){i < r.misses.length - 1 ? "; " : ""}
             </span>
           ))}
-          . The real backend can swap in an LLM classifier and be scored on the same set.
+          {LIVE ? "." : ". The real backend can swap in an LLM classifier and be scored on the same set."}
         </p>
       )}
     </figure>
@@ -114,7 +169,25 @@ export function ClassifierPlayground() {
   const world = useStore((s) => s.world);
   const [text, setText] = useState("Our department changed the attendance rule to 80%.");
   const q = useDeferredValue(text);
-  const c = useMemo(() => (q.trim() ? classify(q, { world }) : null), [q, world]);
+  const [predictor, setPredictor] = useState<Predictor>("ml");
+  const local = useMemo(() => (!LIVE && q.trim() ? classify(q, { world }) : null), [q, world]);
+  const [server, setServer] = useState<{ key: string; c: Classification } | null>(null);
+  const key = `${predictor}:${q.trim()}`;
+  useEffect(() => {
+    if (!LIVE || !q.trim()) return;
+    let stale = false;
+    const t = setTimeout(() => {
+      live
+        .classify(q.trim(), predictor)
+        .then((c) => !stale && setServer({ key, c }))
+        .catch(() => undefined);
+    }, 300);
+    return () => {
+      stale = true;
+      clearTimeout(t);
+    };
+  }, [q, predictor, key, world.memories]);
+  const c = LIVE ? (q.trim() && server ? server.c : null) : local;
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -173,7 +246,22 @@ export function ClassifierPlayground() {
           </div>
         )}
       </div>
-      <ConfusionMatrix />
+      <div>
+        {LIVE && (
+          <div className="mb-3">
+            <Segmented
+              label="Classifier"
+              value={predictor}
+              onChange={setPredictor}
+              options={[
+                { value: "rules", label: "Rules", hint: "Cue-word scorer" },
+                { value: "ml", label: "Trained model", hint: "TF-IDF + logistic regression" },
+              ]}
+            />
+          </div>
+        )}
+        <ConfusionMatrix predictor={predictor} />
+      </div>
     </div>
   );
 }

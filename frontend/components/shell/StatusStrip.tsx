@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import Link from "next/link";
 import { Kbd } from "@/components/ui/Button";
@@ -11,7 +12,34 @@ import { DAY, HOUR } from "@/lib/engine/forget";
 import { cx, weekdayClock } from "@/lib/format";
 import { ease } from "@/lib/motion";
 import { useHydrated, useNow, useStore } from "@/lib/store";
-import { LIVE } from "@/lib/api/live";
+import { LIVE, live } from "@/lib/api/live";
+import type { Health } from "@/lib/api/live";
+
+/** Live mode: which model writes the answers (or "template" when no LLM is configured). */
+function useHealth() {
+  const [health, setHealth] = useState<Health | null>(null);
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    if (!LIVE) return;
+    let stale = false;
+    const load = () =>
+      live
+        .health()
+        .then((h) => {
+          if (stale) return;
+          setHealth(h);
+          setDown(false);
+        })
+        .catch(() => !stale && setDown(true));
+    load();
+    const id = setInterval(load, 60_000);
+    return () => {
+      stale = true;
+      clearInterval(id);
+    };
+  }, []);
+  return { health, down };
+}
 
 function DemoClock() {
   const now = useNow(1000);
@@ -67,6 +95,8 @@ function DemoClock() {
 export function StatusStrip() {
   const path = usePathname();
   const page = NAV.find((n) => path?.startsWith(n.href));
+  const { health, down } = useHealth();
+  const answers = health ? (health.answers === "template" ? "template answers" : health.answers) : null;
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b hairline bg-abyss/80 px-4 backdrop-blur-md sm:px-6">
       <Link href="/" aria-label="Adaptive RAG — home" className="flex items-center gap-2 md:hidden">
@@ -85,12 +115,14 @@ export function StatusStrip() {
           )}
           title={
             LIVE
-              ? "Connected to the FastAPI backend (NEXT_PUBLIC_API_URL)."
+              ? down
+                ? `Can't reach the FastAPI backend at ${process.env.NEXT_PUBLIC_API_URL}.`
+                : `Connected to the FastAPI backend.${health ? ` Answers: ${health.answers} · classifier: ${health.classifier} · embeddings: ${health.embedder} · ${health.vectorStore}.` : ""}`
               : "Everything runs in your browser. Set NEXT_PUBLIC_API_URL to connect the FastAPI backend."
           }
         >
-          <span className={cx("h-1.5 w-1.5 rounded-full", LIVE ? "bg-glacier" : "bg-rhodamine")} />
-          {LIVE ? "Live API" : "Demo engine"}
+          <span className={cx("h-1.5 w-1.5 rounded-full", LIVE ? (down ? "bg-flare" : "bg-glacier") : "bg-rhodamine")} />
+          {LIVE ? (down ? "API unreachable" : answers ? `Live API · ${answers}` : "Live API") : "Demo engine"}
         </span>
         <button
           type="button"

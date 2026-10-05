@@ -1,10 +1,11 @@
 "use client";
 
 import { LayoutGroup, motion } from "motion/react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { Candidate, Factor, Weights } from "@/lib/engine/types";
 import { FACTORS } from "@/lib/engine/types";
-import { rankAll } from "@/lib/engine/retrieve";
+import { rankAll, scoreOf } from "@/lib/engine/retrieve";
+import { LIVE, live } from "@/lib/api/live";
 import { expandQuery } from "@/lib/engine/engine";
 import { isQuestion } from "@/lib/engine/text";
 import type { Classification } from "@/lib/engine/types";
@@ -38,6 +39,38 @@ function rebalance(w: Weights, f: Factor, v: number): Weights {
   const next = { ...w, [f]: value } as Weights;
   for (const g of others) next[g] = rest > 0 ? (w[g] / rest) * (1 - value) : (1 - value) / 3;
   return normalise(next);
+}
+
+/** Live mode: the server scores every source once per query; the weights are applied here. */
+function useServerCandidates(query: string, version: string) {
+  const [res, setRes] = useState<{ query: string; candidates: Candidate[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!LIVE || !query.trim()) return;
+    let stale = false;
+    const t = setTimeout(() => {
+      live
+        .retrieve(query)
+        .then((r) => {
+          if (stale) return;
+          setRes(r);
+          setError(null);
+        })
+        .catch((e) => !stale && setError(e instanceof Error ? e.message : String(e)));
+    }, 250);
+    return () => {
+      stale = true;
+      clearTimeout(t);
+    };
+  }, [query, version]);
+  return { res, error };
+}
+
+function rescore(cands: Candidate[], w: Weights): Candidate[] {
+  return cands
+    .map((c) => ({ ...c, score: Math.round(scoreOf(c.factors, w) * 1000) / 1000 }))
+    .sort((a, b) => b.score - a.score)
+    .map((c, i) => ({ ...c, rank: i + 1 }));
 }
 
 function Formula({ w }: { w: Weights }) {
@@ -107,11 +140,20 @@ export function RetrievalLab() {
   const [showTable, setShowTable] = useState(false);
   const raw = useDeferredValue(query);
   // same query processing as the console: questions get context terms added
-  const q = useMemo(() => expandQuery(raw, { isQuestion: isQuestion(raw) } as Classification), [raw]);
+  const localQ = useMemo(() => expandQuery(raw, { isQuestion: isQuestion(raw) } as Classification), [raw]);
+  // any change to the world adds an event, so this refetches when sources or trust change
+  const server = useServerCandidates(raw, `${world.events.length}:${world.memories.length}:${world.chunks.length}`);
+  const q = LIVE ? (server.res?.query ?? raw) : localQ;
 
   const weights = mode === "learned" ? world.weights : manual;
-  const learnedRank = useMemo(() => rankAll(world, q, world.weights, now), [world, q, now]);
-  const ranked = useMemo(() => rankAll(world, q, weights, now).slice(0, 8), [world, q, weights, now]);
+  const learnedRank = useMemo(
+    () => (LIVE ? rescore(server.res?.candidates ?? [], world.weights) : rankAll(world, q, world.weights, now)),
+    [world, q, now, server.res],
+  );
+  const ranked = useMemo(
+    () => (LIVE ? rescore(server.res?.candidates ?? [], weights) : rankAll(world, q, weights, now)).slice(0, 8),
+    [world, q, weights, now, server.res],
+  );
   const before = new Map(learnedRank.map((c, i) => [c.id, i]));
 
   const unreliable = useMemo(() => {
@@ -234,7 +276,9 @@ export function RetrievalLab() {
             onChange={(e) => setQuery(e.target.value)}
             className="mb-3 h-10 w-full rounded-[10px] border border-shelf bg-abyss/60 px-3.5 text-[14px] text-foam outline-none focus:border-kelp/60"
           />
-          {ranked.length === 0 ? (
+          {LIVE && server.error ? (
+            <Empty title="Couldn’t reach the backend">{server.error}</Empty>
+          ) : ranked.length === 0 ? (
             <Empty title="No candidates">Nothing is similar enough to this question to be retrieved.</Empty>
           ) : showTable ? (
             <div className="overflow-x-auto">
