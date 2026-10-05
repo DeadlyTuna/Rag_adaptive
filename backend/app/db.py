@@ -22,6 +22,8 @@ import threading
 from pathlib import Path
 from typing import Any, Callable, Optional
 
+from pydantic import ValidationError
+
 from .schemas import World
 
 log = logging.getLogger("adaptive-rag")
@@ -125,7 +127,9 @@ class Database:
         case the database is wiped so the caller reseeds from a clean slate."""
         try:
             return self._load()
-        except Exception as e:  # noqa: BLE001 — a schema change or a corrupt row
+        except (ValidationError, ValueError, KeyError, TypeError) as e:
+            # a schema change or a corrupt row (JSONDecodeError is a ValueError). sqlite3
+            # errors — e.g. "database is locked" — propagate: they say nothing about the data.
             why = f"{e.error_count()} invalid fields" if hasattr(e, "error_count") else str(e)
             log.warning("Saved state couldn't be loaded (%s) — starting from the seeded demo.", why)
             self.wipe()

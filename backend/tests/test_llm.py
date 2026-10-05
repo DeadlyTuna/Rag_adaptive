@@ -317,3 +317,24 @@ def test_openai_compatible_client_streams_tokens():
     assert run(go()) == "80% [2]."
     assert seen["url"].endswith("/v1/chat/completions")
     assert seen["body"]["messages"][0] == {"role": "system", "content": "SYSTEM"}
+
+
+def test_strip_citations_keeps_lines_and_handles_groups():
+    from app.generator.prompts import strip_citations
+
+    assert strip_citations("80% [1], per the rules [2, 3].\n1. Attend [4]\n2. Pass [1-3]") == "80%, per the rules.\n1. Attend\n2. Pass"
+
+
+def test_a_locked_database_is_not_wiped(make_engine, monkeypatch):
+    import sqlite3
+
+    import pytest
+
+    eng = make_engine()
+    chat(eng, "I have a DBMS quiz tomorrow.")
+    monkeypatch.setattr(eng.db, "_load", lambda: (_ for _ in ()).throw(sqlite3.OperationalError("database is locked")))
+    with pytest.raises(sqlite3.OperationalError):
+        eng.db.load()
+    monkeypatch.undo()
+    world, _ = eng.db.load()
+    assert any(t.text == "I have a DBMS quiz tomorrow." for t in world.turns)

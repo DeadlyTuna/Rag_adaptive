@@ -186,8 +186,8 @@ export function ClassifierPlayground() {
       stale = true;
       clearTimeout(t);
     };
-  }, [q, predictor, key, world.memories]);
-  const c = LIVE ? (q.trim() && server ? server.c : null) : local;
+  }, [q, predictor, key, world.memories.length, world.events.length]);
+  const c = LIVE ? (server?.key === key ? server.c : null) : local;
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">

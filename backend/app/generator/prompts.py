@@ -40,10 +40,11 @@ When the student's message is a statement rather than a question:
 
 # Old answers cite numbers from *their* CONTEXT block; left in, the model would read
 # them as references into this turn's numbering.
-_CITE = re.compile(r"\s*\[\d+\]")
+_CITE = re.compile(r"[ \t]*\[\d+(?:\s*[,–-]\s*\d+)*\]")
 
 
 def strip_citations(text: str) -> str:
+    # spaces only, never newlines, so numbered "1." lines keep their own lines
     return _CITE.sub("", text).strip()
 
 

@@ -43,7 +43,7 @@ function rebalance(w: Weights, f: Factor, v: number): Weights {
 
 /** Live mode: the server scores every source once per query; the weights are applied here. */
 function useServerCandidates(query: string, version: string) {
-  const [res, setRes] = useState<{ query: string; candidates: Candidate[] } | null>(null);
+  const [res, setRes] = useState<{ asked: string; query: string; candidates: Candidate[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!LIVE || !query.trim()) return;
@@ -53,7 +53,7 @@ function useServerCandidates(query: string, version: string) {
         .retrieve(query)
         .then((r) => {
           if (stale) return;
-          setRes(r);
+          setRes({ ...r, asked: query });
           setError(null);
         })
         .catch((e) => !stale && setError(e instanceof Error ? e.message : String(e)));
@@ -63,7 +63,8 @@ function useServerCandidates(query: string, version: string) {
       clearTimeout(t);
     };
   }, [query, version]);
-  return { res, error };
+  // only ever show the ranking for the question currently in the box
+  return { res: res && res.asked === query && query.trim() ? res : null, error };
 }
 
 function rescore(cands: Candidate[], w: Weights): Candidate[] {

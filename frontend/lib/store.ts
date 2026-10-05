@@ -94,6 +94,9 @@ export interface AppState extends Persisted {
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 let skipping = false;
 let pulseKey = 1;
+// Orders /api/state responses: a refresh only applies if nothing newer has happened since
+// it was sent (a later refresh, or a local change such as new weights or a reset).
+let stateSeq = 0;
 
 const reducedMotion = () =>
   typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
@@ -327,8 +330,9 @@ export const useStore = create<AppState>()(
         } finally {
           set({ pending: null, stream: null });
         }
-        // a failed refresh must not turn a finished answer into an error
-        if (finished) await get().refresh();
+        // always resync: a failed turn is rolled back on the server, so the patch it sent is void.
+        // refresh() swallows its own errors, so it can't turn a finished answer into an error.
+        await get().refresh();
       };
 
       return {
@@ -485,6 +489,7 @@ export const useStore = create<AppState>()(
           if (get().pending) return;
           const weights = normalise(w);
           if (LIVE) {
+            stateSeq++;
             set((s) => ({ world: { ...s.world, weights } }));
             live
               .weights(weights, label)
@@ -522,6 +527,7 @@ export const useStore = create<AppState>()(
           });
           setTimeout(() => (skipping = false), 50);
           if (LIVE) {
+            stateSeq++;
             live
               .reset()
               .then((server) => applyServerWorld(server, { toast: false, scriptDone: [] }))
@@ -531,8 +537,10 @@ export const useStore = create<AppState>()(
 
         refresh: async (opts) => {
           if (!LIVE) return;
+          const seq = ++stateSeq;
           try {
             const server = await live.state();
+            if (seq !== stateSeq) return; // something newer happened while this was in flight
             if (get().pending) return; // a turn started meanwhile; its own refresh follows
             applyServerWorld(server, opts);
           } catch {

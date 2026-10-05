@@ -118,7 +118,7 @@ cd backend
 pytest tests
 ```
 
-42 tests, on hashed embeddings and an in-memory vector store, so nothing is downloaded and
+44 tests, on hashed embeddings and an in-memory vector store, so nothing is downloaded and
 no API key is needed. They cover the memory manager, the API routes, a parity test that
 replays the demo script against the frontend engine's recorded output, and the LLM path
 (the prompt and citations with a fake model; the Claude and OpenAI-compatible clients over

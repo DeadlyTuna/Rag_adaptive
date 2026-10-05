@@ -16,7 +16,7 @@ All the learning lives in SQLite and the ranking weights. The LLM is never train
 ## Status
 
 - ✅ **Backend in `backend/`: built, tested and committed** (branch `backend-rag-1no7rc`).
-  - 42 tests pass (`pytest tests`).
+  - 44 tests pass (`pytest tests`).
   - A parity test replays a 14-message script, plus feedback, a document upload and a clock jump, and gets exactly the same decisions, rankings and answers as the frontend's TypeScript engine.
   - The real stack (MiniLM, Chroma and the trained classifier) runs the 9-step demo.
 - ✅ **Claude integration.** Defaults to `claude-opus-5-5` (the classifier uses the same model unless `ANTHROPIC_CLASSIFIER_MODEL` is set), `effort: "low"`, server-side refusal fallbacks (`fallbacks: "default"`, beta `server-side-fallback-2026-07-01`), streaming `max_tokens` 64000 and 16000 for structured output. `LLM_PROVIDER=anthropic` works without a key via an `ant auth login` profile. API errors are logged as one readable line. Old `[n]` markers are stripped from the history the model sees. A saved database that no longer validates is wiped and reseeded.
