@@ -1,0 +1,16 @@
+fastapi>=0.135,<0.143
+uvicorn[standard]>=0.54
+python-multipart>=0.0.20
+python-dotenv>=1.0
+pydantic>=2.13,<3
+numpy>=2.0
+scikit-learn>=1.9,<1.10
+joblib>=1.4
+sentence-transformers>=6.1,<7
+chromadb>=1.5.9,<1.6
+anthropic>=1.11,<2
+openai>=3.24,<4
+pypdf>=6.19
+# tests
+pytest>=9
+httpx>=0.28

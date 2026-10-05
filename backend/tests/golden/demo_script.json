@@ -1,0 +1,1577 @@
+{
+  "t0": 1791174600000,
+  "script": [
+    "What is the minimum attendance requirement?",
+    "Our department changed it to 80% last semester.",
+    "When can I write my FAT?",
+    "I prefer concise answers.",
+    "I have a DBMS exam tomorrow.",
+    "What's 2+2?",
+    "My attendance is 78%.",
+    "Am I eligible for FAT?",
+    "How many marks do I need to pass?",
+    "Actually, your previous answer was wrong.",
+    "What are the library timings?",
+    "My name is Harsh.",
+    "Hello!",
+    "The professor changed the deadline."
+  ],
+  "steps": [
+    {
+      "kind": "message",
+      "text": "What is the minimum attendance requirement?",
+      "now": 1791174660000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "question",
+        "slot": "attendance.minimum",
+        "value": null,
+        "probs": {
+          "persistent": 0.03832929803862899,
+          "important": 0.11514757488936585,
+          "correction": 0.03832929803862899,
+          "temporary": 0.03832929803862899,
+          "irrelevant": 0.7698645309947472
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 20,
+            "end": 30,
+            "kind": "topic",
+            "text": "attendance"
+          }
+        ]
+      },
+      "ops": [],
+      "query": "What is the minimum attendance requirement? minimum attendance requirement",
+      "candidates": [
+        {
+          "id": "regs-3.1",
+          "rank": 1,
+          "factors": {
+            "S": 0.757,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.706,
+          "note": null
+        },
+        {
+          "id": "regs-3.3",
+          "rank": 2,
+          "factors": {
+            "S": 0.593,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.7
+          },
+          "score": 0.625,
+          "note": null
+        },
+        {
+          "id": "regs-4.3",
+          "rank": 3,
+          "factors": {
+            "S": 0.511,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.596,
+          "note": null
+        },
+        {
+          "id": "regs-3.2",
+          "rank": 4,
+          "factors": {
+            "S": 0.365,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.65
+          },
+          "score": 0.515,
+          "note": null
+        },
+        {
+          "id": "regs-5.1",
+          "rank": 5,
+          "factors": {
+            "S": 0.33,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.7
+          },
+          "score": 0.507,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-style"
+      ],
+      "answer": "1. The minimum attendance is 75% in every course [1].\n2. Theory and lab attendance are counted separately.\n3. Below the minimum, you're debarred from that course's FAT [2].",
+      "intent": "attendance-minimum",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "regs-3.1"
+        },
+        {
+          "n": 2,
+          "itemId": "regs-3.3"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "Our department changed it to 80% last semester.",
+      "now": 1791174720000,
+      "classification": {
+        "label": "correction",
+        "decision": "replace",
+        "slot": "attendance.minimum",
+        "value": "80%",
+        "probs": {
+          "persistent": 0.010901363122881631,
+          "important": 0.08055078366978619,
+          "correction": 0.8879254959909578,
+          "temporary": 0.0073074022303812325,
+          "irrelevant": 0.013314954985993176
+        },
+        "conflict": "regs-3.1",
+        "coref": "“it” → minimum attendance (from your previous question)",
+        "spans": [
+          {
+            "start": 15,
+            "end": 22,
+            "kind": "cue",
+            "text": "changed"
+          },
+          {
+            "start": 29,
+            "end": 32,
+            "kind": "value",
+            "text": "80%"
+          },
+          {
+            "start": 33,
+            "end": 46,
+            "kind": "time",
+            "text": "last semester"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "replace",
+          "title": "Minimum attendance = 80% (CSE department)",
+          "detail": "Replaces “75%” from Academic Regulations 2024 §3.1",
+          "memoryId": "mem-muuoizoz4yv",
+          "previousId": null
+        }
+      ],
+      "query": "Our department changed it to 80% last semester. Minimum attendance",
+      "candidates": [
+        {
+          "id": "mem-muuoizoz4yv",
+          "rank": 1,
+          "factors": {
+            "S": 1,
+            "R": 1,
+            "C": 0.82,
+            "I": 0.9
+          },
+          "score": 0.94,
+          "note": null
+        },
+        {
+          "id": "regs-3.1",
+          "rank": 2,
+          "factors": {
+            "S": 0.606,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.638,
+          "note": "Overridden for minimum attendance → 80% (your correction)"
+        },
+        {
+          "id": "mem-dept",
+          "rank": 3,
+          "factors": {
+            "S": 0.317,
+            "R": 0.819,
+            "C": 0.9,
+            "I": 0.7
+          },
+          "score": 0.595,
+          "note": null
+        },
+        {
+          "id": "exams-6",
+          "rank": 4,
+          "factors": {
+            "S": 0.26,
+            "R": 0.862,
+            "C": 0.95,
+            "I": 0.6
+          },
+          "score": 0.574,
+          "note": null
+        },
+        {
+          "id": "regs-3.2",
+          "rank": 5,
+          "factors": {
+            "S": 0.392,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.65
+          },
+          "score": 0.527,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-style"
+      ],
+      "answer": "Got it — minimum attendance is now 80% for your department [1]. I've marked the earlier 75% from Academic Regulations 2024 §3.1 as outdated [2], so future answers will use 80%.",
+      "intent": "ack-correction",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizoz4yv"
+        },
+        {
+          "n": 2,
+          "itemId": "regs-3.1"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "When can I write my FAT?",
+      "now": 1791174780000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "question",
+        "slot": "fat.eligibility",
+        "value": null,
+        "probs": {
+          "persistent": 0.04151869244971153,
+          "important": 0.04151869244971153,
+          "correction": 0.04151869244971153,
+          "temporary": 0.04151869244971153,
+          "irrelevant": 0.8339252302011538
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 20,
+            "end": 23,
+            "kind": "topic",
+            "text": "FAT"
+          }
+        ]
+      },
+      "ops": [],
+      "query": "When can I write my FAT? FAT eligibility minimum attendance requirement CAT my current attendance",
+      "candidates": [
+        {
+          "id": "regs-4.3",
+          "rank": 1,
+          "factors": {
+            "S": 0.816,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.733,
+          "note": null
+        },
+        {
+          "id": "regs-3.3",
+          "rank": 2,
+          "factors": {
+            "S": 0.766,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.7
+          },
+          "score": 0.703,
+          "note": null
+        },
+        {
+          "id": "mem-muuoizoz4yv",
+          "rank": 3,
+          "factors": {
+            "S": 0.466,
+            "R": 1,
+            "C": 0.82,
+            "I": 0.9
+          },
+          "score": 0.7,
+          "note": null
+        },
+        {
+          "id": "regs-3.1",
+          "rank": 4,
+          "factors": {
+            "S": 0.454,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.57,
+          "note": "Overridden for minimum attendance → 80% (your correction)"
+        },
+        {
+          "id": "exams-6",
+          "rank": 5,
+          "factors": {
+            "S": 0.22,
+            "R": 0.862,
+            "C": 0.95,
+            "I": 0.6
+          },
+          "score": 0.556,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-style"
+      ],
+      "answer": "You can write a course's FAT when both conditions are met:\n1. Attendance of at least 80% in that course [1] — your department's rule, not the university's 75% [2].\n2. At least one of CAT-1 and CAT-2 attempted [3].\nThis semester's FATs start on 17 November [4].",
+      "intent": "fat-eligibility",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizoz4yv"
+        },
+        {
+          "n": 2,
+          "itemId": "regs-3.1"
+        },
+        {
+          "n": 3,
+          "itemId": "regs-4.3"
+        },
+        {
+          "n": 4,
+          "itemId": "exams-6"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "I prefer concise answers.",
+      "now": 1791174840000,
+      "classification": {
+        "label": "persistent",
+        "decision": "replace",
+        "slot": "user.style",
+        "value": "concise",
+        "probs": {
+          "persistent": 0.9026292981347875,
+          "important": 0.020192514099264213,
+          "correction": 0.020192514099264213,
+          "temporary": 0.020192514099264213,
+          "irrelevant": 0.03679315956741975
+        },
+        "conflict": "mem-style",
+        "coref": null,
+        "spans": [
+          {
+            "start": 0,
+            "end": 8,
+            "kind": "topic",
+            "text": "I prefer"
+          },
+          {
+            "start": 9,
+            "end": 24,
+            "kind": "topic",
+            "text": "concise answers"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "replace",
+          "title": "Prefers concise answers",
+          "detail": "Replaces “step-by-step” from an earlier memory",
+          "memoryId": "mem-muuoizp1agi",
+          "previousId": "mem-style"
+        }
+      ],
+      "query": "I prefer concise answers. Answer style",
+      "candidates": [
+        {
+          "id": "mem-muuoizp1agi",
+          "rank": 1,
+          "factors": {
+            "S": 1,
+            "R": 1,
+            "C": 0.92,
+            "I": 0.75
+          },
+          "score": 0.942,
+          "note": "Looked up by topic"
+        },
+        {
+          "id": "mem-style",
+          "rank": 2,
+          "factors": {
+            "S": 0.647,
+            "R": 0.935,
+            "C": 0.92,
+            "I": 0.75
+          },
+          "score": 0.774,
+          "note": "Looked up by topic"
+        }
+      ],
+      "excluded": [
+        {
+          "id": "mem-style-old",
+          "excluded": "Replaced by “Prefers step-by-step explanations”"
+        },
+        {
+          "id": "mem-style",
+          "excluded": "Replaced by “Prefers concise answers”"
+        }
+      ],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Noted — I'll keep answers short and to the point from now on [1]. Your earlier preference for step-by-step answers is kept as history [2].",
+      "intent": "ack-preference",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizp1agi"
+        },
+        {
+          "n": 2,
+          "itemId": "mem-style"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "I have a DBMS exam tomorrow.",
+      "now": 1791174900000,
+      "classification": {
+        "label": "temporary",
+        "decision": "keep-temporarily",
+        "slot": "event.exam",
+        "value": "DBMS exam tomorrow",
+        "probs": {
+          "persistent": 0.04228762560826805,
+          "important": 0.028346243144472115,
+          "correction": 0.028346243144472115,
+          "temporary": 0.8493696655488046,
+          "irrelevant": 0.05165022255398323
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 14,
+            "end": 27,
+            "kind": "topic",
+            "text": "exam tomorrow"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "add",
+          "title": "Has a DBMS exam on Tue, 6 Oct",
+          "detail": "Kept until Tue, 11:59 pm",
+          "memoryId": "mem-muuoizpde9y",
+          "previousId": null
+        }
+      ],
+      "query": "I have a DBMS exam tomorrow. Upcoming exam",
+      "candidates": [
+        {
+          "id": "mem-muuoizpde9y",
+          "rank": 1,
+          "factors": {
+            "S": 1,
+            "R": 1,
+            "C": 0.85,
+            "I": 0.5
+          },
+          "score": 0.888,
+          "note": null
+        },
+        {
+          "id": "mem-courses",
+          "rank": 2,
+          "factors": {
+            "S": 0.222,
+            "R": 0.741,
+            "C": 0.9,
+            "I": 0.7
+          },
+          "score": 0.541,
+          "note": null
+        }
+      ],
+      "excluded": [
+        {
+          "id": "mem-viva",
+          "excluded": "Expired — it was only relevant for a short time"
+        }
+      ],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Good luck! I'll keep that in mind until Tue, 11:59 pm, then let it go [1].",
+      "intent": "ack-temporary",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizpde9y"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "What's 2+2?",
+      "now": 1791174960000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "question",
+        "slot": null,
+        "value": null,
+        "probs": {
+          "persistent": 0.004436430944779046,
+          "important": 0.004436430944779046,
+          "correction": 0.004436430944779046,
+          "temporary": 0.004436430944779046,
+          "irrelevant": 0.9822542762208839
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 7,
+            "end": 10,
+            "kind": "value",
+            "text": "2+2"
+          }
+        ]
+      },
+      "ops": [],
+      "query": "What's 2+2?",
+      "candidates": [],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "4. That's not something I need to remember, so I didn't store it.",
+      "intent": "arithmetic",
+      "citations": [],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "My attendance is 78%.",
+      "now": 1791175020000,
+      "classification": {
+        "label": "persistent",
+        "decision": "store",
+        "slot": "user.attendance",
+        "value": "78%",
+        "probs": {
+          "persistent": 0.8823092825439873,
+          "important": 0.03254236096773786,
+          "correction": 0.02944554587484211,
+          "temporary": 0.019737939666368696,
+          "irrelevant": 0.03596487094706397
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 0,
+            "end": 13,
+            "kind": "topic",
+            "text": "My attendance"
+          },
+          {
+            "start": 17,
+            "end": 20,
+            "kind": "value",
+            "text": "78%"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "add",
+          "title": "Current attendance is 78%",
+          "detail": "Stored as persistent · confidence 0.90",
+          "memoryId": "mem-muuoizpgkuu",
+          "previousId": null
+        }
+      ],
+      "query": "My attendance is 78%. Your attendance",
+      "candidates": [
+        {
+          "id": "mem-muuoizpgkuu",
+          "rank": 1,
+          "factors": {
+            "S": 1,
+            "R": 1,
+            "C": 0.9,
+            "I": 0.7
+          },
+          "score": 0.93,
+          "note": null
+        },
+        {
+          "id": "mem-muuoizoz4yv",
+          "rank": 2,
+          "factors": {
+            "S": 0.671,
+            "R": 1,
+            "C": 0.82,
+            "I": 0.9
+          },
+          "score": 0.792,
+          "note": null
+        },
+        {
+          "id": "regs-3.1",
+          "rank": 3,
+          "factors": {
+            "S": 0.719,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.689,
+          "note": "Overridden for minimum attendance → 80% (your correction)"
+        },
+        {
+          "id": "regs-3.2",
+          "rank": 4,
+          "factors": {
+            "S": 0.466,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.65
+          },
+          "score": 0.56,
+          "note": null
+        },
+        {
+          "id": "regs-3.3",
+          "rank": 5,
+          "factors": {
+            "S": 0.308,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.7
+          },
+          "score": 0.497,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Thanks — I'll remember that your attendance is 78% [1].",
+      "intent": "ack-profile",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizpgkuu"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "Am I eligible for FAT?",
+      "now": 1791175080000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "question",
+        "slot": "fat.eligibility",
+        "value": null,
+        "probs": {
+          "persistent": 0.04151869244971153,
+          "important": 0.04151869244971153,
+          "correction": 0.04151869244971153,
+          "temporary": 0.04151869244971153,
+          "irrelevant": 0.8339252302011538
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 18,
+            "end": 21,
+            "kind": "topic",
+            "text": "FAT"
+          }
+        ]
+      },
+      "ops": [],
+      "query": "Am I eligible for FAT? FAT eligibility minimum attendance requirement CAT my current attendance",
+      "candidates": [
+        {
+          "id": "mem-muuoizpgkuu",
+          "rank": 1,
+          "factors": {
+            "S": 0.593,
+            "R": 1,
+            "C": 0.9,
+            "I": 0.7
+          },
+          "score": 0.747,
+          "note": null
+        },
+        {
+          "id": "regs-4.3",
+          "rank": 2,
+          "factors": {
+            "S": 0.816,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.733,
+          "note": null
+        },
+        {
+          "id": "regs-3.3",
+          "rank": 3,
+          "factors": {
+            "S": 0.766,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.7
+          },
+          "score": 0.703,
+          "note": null
+        },
+        {
+          "id": "mem-muuoizoz4yv",
+          "rank": 4,
+          "factors": {
+            "S": 0.466,
+            "R": 1,
+            "C": 0.82,
+            "I": 0.9
+          },
+          "score": 0.7,
+          "note": null
+        },
+        {
+          "id": "regs-3.1",
+          "rank": 5,
+          "factors": {
+            "S": 0.454,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.75
+          },
+          "score": 0.57,
+          "note": "Overridden for minimum attendance → 80% (your correction)"
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Not yet. Your 78% [1] is below your department's 80% minimum [2], so you'd be debarred from the FAT [3].",
+      "intent": "am-i-eligible",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizpgkuu"
+        },
+        {
+          "n": 2,
+          "itemId": "mem-muuoizoz4yv"
+        },
+        {
+          "n": 3,
+          "itemId": "regs-3.3"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "How many marks do I need to pass?",
+      "now": 1791175140000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "question",
+        "slot": "pass.marks",
+        "value": null,
+        "probs": {
+          "persistent": 0.04151869244971153,
+          "important": 0.04151869244971153,
+          "correction": 0.04151869244971153,
+          "temporary": 0.04151869244971153,
+          "irrelevant": 0.8339252302011538
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 9,
+            "end": 32,
+            "kind": "topic",
+            "text": "marks do I need to pass"
+          }
+        ]
+      },
+      "ops": [],
+      "query": "How many marks do I need to pass?",
+      "candidates": [
+        {
+          "id": "regs-5.1",
+          "rank": 1,
+          "factors": {
+            "S": 0.78,
+            "R": 0.104,
+            "C": 0.95,
+            "I": 0.7
+          },
+          "score": 0.709,
+          "note": null
+        },
+        {
+          "id": "mem-cat2",
+          "rank": 2,
+          "factors": {
+            "S": 0.308,
+            "R": 0.716,
+            "C": 0.7,
+            "I": 0.85
+          },
+          "score": 0.549,
+          "note": null
+        },
+        {
+          "id": "cse-3",
+          "rank": 3,
+          "factors": {
+            "S": 0.242,
+            "R": 0.294,
+            "C": 0.808,
+            "I": 0.4
+          },
+          "score": 0.415,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "50 out of 100 overall, with at least 40 in the FAT [1].",
+      "intent": "pass-marks",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "regs-5.1"
+        }
+      ],
+      "weights": {
+        "S": 0.45,
+        "R": 0.15,
+        "C": 0.25,
+        "I": 0.15
+      }
+    },
+    {
+      "kind": "message",
+      "text": "Actually, your previous answer was wrong.",
+      "now": 1791175200000,
+      "classification": {
+        "label": "correction",
+        "decision": "flag-previous",
+        "slot": null,
+        "value": null,
+        "probs": {
+          "persistent": 0.0032928367128564283,
+          "important": 0.0032928367128564283,
+          "correction": 0.984121550180319,
+          "temporary": 0.0032928367128564283,
+          "irrelevant": 0.00599993968111178
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 0,
+            "end": 8,
+            "kind": "cue",
+            "text": "Actually"
+          },
+          {
+            "start": 35,
+            "end": 40,
+            "kind": "cue",
+            "text": "wrong"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "flag",
+          "title": "Lowered trust in Regulations §5.1",
+          "detail": "Reliability 1.00 → 0.85",
+          "memoryId": null,
+          "previousId": "regs-5.1"
+        }
+      ],
+      "query": "Actually, your previous answer was wrong.",
+      "candidates": [
+        {
+          "id": "regs-5.1",
+          "rank": 1,
+          "factors": {
+            "S": 0,
+            "R": 0.104,
+            "C": 0.808,
+            "I": 0.7
+          },
+          "score": 0.318,
+          "note": "Looked up by topic"
+        }
+      ],
+      "excluded": [
+        {
+          "id": "mem-style-old",
+          "excluded": "Replaced by “Prefers step-by-step explanations”"
+        }
+      ],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Thanks for flagging it. I've lowered my trust in Regulations §5.1 [1] for questions like that. What's the correct information? I'll remember it.",
+      "intent": "ack-flag",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "regs-5.1"
+        }
+      ],
+      "weights": {
+        "S": 0.412,
+        "R": 0.198,
+        "C": 0.229,
+        "I": 0.161
+      }
+    },
+    {
+      "kind": "message",
+      "text": "What are the library timings?",
+      "now": 1791175260000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "question",
+        "slot": "library.hours",
+        "value": null,
+        "probs": {
+          "persistent": 0.04151869244971153,
+          "important": 0.04151869244971153,
+          "correction": 0.04151869244971153,
+          "temporary": 0.04151869244971153,
+          "irrelevant": 0.8339252302011538
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 13,
+            "end": 20,
+            "kind": "topic",
+            "text": "library"
+          }
+        ]
+      },
+      "ops": [],
+      "query": "What are the library timings?",
+      "candidates": [
+        {
+          "id": "mem-library",
+          "rank": 1,
+          "factors": {
+            "S": 0.944,
+            "R": 0.606,
+            "C": 0.78,
+            "I": 0.9
+          },
+          "score": 0.832,
+          "note": null
+        },
+        {
+          "id": "regs-9.1",
+          "rank": 2,
+          "factors": {
+            "S": 0.803,
+            "R": 0.104,
+            "C": 0.808,
+            "I": 0.45
+          },
+          "score": 0.609,
+          "note": "Overridden for library hours → closes 10 pm (your correction)"
+        },
+        {
+          "id": "cse-3",
+          "rank": 3,
+          "factors": {
+            "S": 0.379,
+            "R": 0.294,
+            "C": 0.808,
+            "I": 0.4
+          },
+          "score": 0.464,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "On weekdays the library now closes at 10 pm [1] — you told me it changed; the regulations still say 8 am to 8 pm [2]. On Saturdays it's open 9 am to 5 pm.",
+      "intent": "library-hours",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-library"
+        },
+        {
+          "n": 2,
+          "itemId": "regs-9.1"
+        }
+      ],
+      "weights": {
+        "S": 0.412,
+        "R": 0.198,
+        "C": 0.229,
+        "I": 0.161
+      }
+    },
+    {
+      "kind": "message",
+      "text": "My name is Harsh.",
+      "now": 1791175320000,
+      "classification": {
+        "label": "persistent",
+        "decision": "reinforce",
+        "slot": "user.name",
+        "value": "Harsh",
+        "probs": {
+          "persistent": 0.9026292981347875,
+          "important": 0.020192514099264213,
+          "correction": 0.020192514099264213,
+          "temporary": 0.020192514099264213,
+          "irrelevant": 0.03679315956741975
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 0,
+            "end": 7,
+            "kind": "topic",
+            "text": "My name"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "reinforce",
+          "title": "Name: Harsh",
+          "detail": "Confirmed — confidence now 0.94",
+          "memoryId": "mem-name",
+          "previousId": null
+        }
+      ],
+      "query": "My name is Harsh. Name",
+      "candidates": [
+        {
+          "id": "mem-name",
+          "rank": 1,
+          "factors": {
+            "S": 1,
+            "R": 1,
+            "C": 0.94,
+            "I": 0.7
+          },
+          "score": 0.938,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "I already had that — I've marked it as confirmed [1].",
+      "intent": "ack-reinforce",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-name"
+        }
+      ],
+      "weights": {
+        "S": 0.412,
+        "R": 0.198,
+        "C": 0.229,
+        "I": 0.161
+      }
+    },
+    {
+      "kind": "message",
+      "text": "Hello!",
+      "now": 1791175380000,
+      "classification": {
+        "label": "irrelevant",
+        "decision": "discard",
+        "slot": null,
+        "value": null,
+        "probs": {
+          "persistent": 0.04151869244971153,
+          "important": 0.04151869244971153,
+          "correction": 0.04151869244971153,
+          "temporary": 0.04151869244971153,
+          "irrelevant": 0.8339252302011538
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": []
+      },
+      "ops": [
+        {
+          "kind": "discard",
+          "title": "Not stored",
+          "detail": "Small talk or a one-off — not worth storing.",
+          "memoryId": null,
+          "previousId": null
+        }
+      ],
+      "query": "Hello!",
+      "candidates": [],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Hi! Ask me about attendance, exams or hostel rules — or tell me something I should remember.",
+      "intent": "greeting",
+      "citations": [],
+      "weights": {
+        "S": 0.412,
+        "R": 0.198,
+        "C": 0.229,
+        "I": 0.161
+      }
+    },
+    {
+      "kind": "message",
+      "text": "The professor changed the deadline.",
+      "now": 1791175440000,
+      "classification": {
+        "label": "important",
+        "decision": "store",
+        "slot": null,
+        "value": null,
+        "probs": {
+          "persistent": 0.01265602710954956,
+          "important": 0.9327465870302951,
+          "correction": 0.0188805738160435,
+          "temporary": 0.01265602710954956,
+          "irrelevant": 0.02306078493456221
+        },
+        "conflict": null,
+        "coref": null,
+        "spans": [
+          {
+            "start": 14,
+            "end": 21,
+            "kind": "cue",
+            "text": "changed"
+          }
+        ]
+      },
+      "ops": [
+        {
+          "kind": "add",
+          "title": "The professor changed the deadline",
+          "detail": "Stored as important · confidence 0.70",
+          "memoryId": "mem-muuoizpn1361",
+          "previousId": null
+        }
+      ],
+      "query": "The professor changed the deadline.",
+      "candidates": [
+        {
+          "id": "mem-muuoizpn1361",
+          "rank": 1,
+          "factors": {
+            "S": 1,
+            "R": 1,
+            "C": 0.7,
+            "I": 0.85
+          },
+          "score": 0.907,
+          "note": null
+        },
+        {
+          "id": "mem-lab-deadline",
+          "rank": 2,
+          "factors": {
+            "S": 0.549,
+            "R": 0.875,
+            "C": 0.74,
+            "I": 0.85
+          },
+          "score": 0.706,
+          "note": null
+        }
+      ],
+      "excluded": [],
+      "preferences": [
+        "mem-muuoizp1agi"
+      ],
+      "answer": "Noted. I'll keep this with high priority [1]: “The professor changed the deadline”.",
+      "intent": "ack-knowledge",
+      "citations": [
+        {
+          "n": 1,
+          "itemId": "mem-muuoizpn1361"
+        }
+      ],
+      "weights": {
+        "S": 0.412,
+        "R": 0.198,
+        "C": 0.229,
+        "I": 0.161
+      }
+    },
+    {
+      "kind": "feedback",
+      "step": 7,
+      "verdict": "helpful",
+      "feedback": {
+        "verdict": "helpful",
+        "deltas": {
+          "S": -0.013,
+          "R": 0.029,
+          "C": -0.009,
+          "I": -0.007
+        },
+        "at": 1791175800000
+      },
+      "weights": {
+        "S": 0.399,
+        "R": 0.227,
+        "C": 0.22,
+        "I": 0.154
+      }
+    },
+    {
+      "kind": "feedback",
+      "step": 10,
+      "verdict": "not_helpful",
+      "reason": "wrong_source",
+      "target": "mem-library",
+      "feedback": {
+        "verdict": "not_helpful",
+        "reason": "wrong_source",
+        "targetId": "mem-library",
+        "deltas": {
+          "S": 0.025,
+          "R": -0.023,
+          "C": 0.023,
+          "I": -0.025
+        },
+        "reliability": {
+          "id": "mem-library",
+          "from": 1,
+          "to": 0.85
+        },
+        "at": 1791175801000
+      },
+      "weights": {
+        "S": 0.424,
+        "R": 0.204,
+        "C": 0.243,
+        "I": 0.129
+      }
+    },
+    {
+      "kind": "ingest",
+      "chunkIds": [
+        "circular-1",
+        "circular-2",
+        "circular-3"
+      ],
+      "events": [
+        {
+          "type": "document.indexed",
+          "title": "Document indexed",
+          "detail": "CSE Department Circular 2025/14 · 3 chunks"
+        },
+        {
+          "type": "memory.confirmed",
+          "title": "Fact confirmed by a document",
+          "detail": "Minimum attendance = 80% (CSE department) · CSE Circular §1 · confidence 0.82 → 0.95"
+        }
+      ]
+    },
+    {
+      "kind": "tick",
+      "expired": 1,
+      "events": [
+        "memory.expired"
+      ]
+    },
+    {
+      "kind": "final",
+      "memories": [
+        {
+          "id": "mem-name",
+          "slot": "user.name",
+          "text": "Name: Harsh",
+          "value": "Harsh",
+          "status": "current",
+          "confidence": 0.94,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-dept",
+          "slot": "user.department",
+          "text": "Studies CSE, semester 3",
+          "value": "CSE",
+          "status": "current",
+          "confidence": 0.9,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-courses",
+          "slot": null,
+          "text": "Taking DBMS, Operating Systems and COA this semester",
+          "value": null,
+          "status": "current",
+          "confidence": 0.9,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-style-old",
+          "slot": "user.style",
+          "text": "Prefers answers as bullet points",
+          "value": "bullet points",
+          "status": "outdated",
+          "confidence": 0.92,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-style",
+          "slot": "user.style",
+          "text": "Prefers step-by-step explanations",
+          "value": "step-by-step",
+          "status": "outdated",
+          "confidence": 0.92,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-hostel",
+          "slot": null,
+          "text": "Lives in hostel block C",
+          "value": null,
+          "status": "current",
+          "confidence": 0.9,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-library",
+          "slot": "library.hours",
+          "text": "Library closes at 10 pm on weekdays",
+          "value": "closes 10 pm",
+          "status": "current",
+          "confidence": 0.78,
+          "reliability": 0.85,
+          "cls": "correction"
+        },
+        {
+          "id": "mem-cat2",
+          "slot": null,
+          "text": "CAT-2 marks are published on the student portal",
+          "value": null,
+          "status": "current",
+          "confidence": 0.7,
+          "reliability": 1,
+          "cls": "important"
+        },
+        {
+          "id": "mem-lab-deadline",
+          "slot": null,
+          "text": "DBMS lab record deadline moved to Friday of week 12",
+          "value": null,
+          "status": "current",
+          "confidence": 0.74,
+          "reliability": 1,
+          "cls": "important"
+        },
+        {
+          "id": "mem-viva",
+          "slot": "event.exam",
+          "text": "OS lab viva today",
+          "value": "OS viva today",
+          "status": "expired",
+          "confidence": 0.85,
+          "reliability": 1,
+          "cls": "temporary"
+        },
+        {
+          "id": "mem-muuoizoz4yv",
+          "slot": "attendance.minimum",
+          "text": "Minimum attendance = 80% (CSE department)",
+          "value": "80%",
+          "status": "current",
+          "confidence": 0.95,
+          "reliability": 1,
+          "cls": "correction"
+        },
+        {
+          "id": "mem-muuoizp1agi",
+          "slot": "user.style",
+          "text": "Prefers concise answers",
+          "value": "concise",
+          "status": "current",
+          "confidence": 0.92,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-muuoizpde9y",
+          "slot": "event.exam",
+          "text": "Has a DBMS exam on Tue, 6 Oct",
+          "value": "DBMS exam tomorrow",
+          "status": "expired",
+          "confidence": 0.85,
+          "reliability": 1,
+          "cls": "temporary"
+        },
+        {
+          "id": "mem-muuoizpgkuu",
+          "slot": "user.attendance",
+          "text": "Current attendance is 78%",
+          "value": "78%",
+          "status": "current",
+          "confidence": 0.9,
+          "reliability": 1,
+          "cls": "persistent"
+        },
+        {
+          "id": "mem-muuoizpn1361",
+          "slot": null,
+          "text": "The professor changed the deadline",
+          "value": null,
+          "status": "current",
+          "confidence": 0.7,
+          "reliability": 1,
+          "cls": "important"
+        }
+      ],
+      "reliability": {
+        "regs-5.1": 0.85,
+        "regs-5.2": 0.85,
+        "regs-9.1": 0.85,
+        "exams-3": 0.88,
+        "hostel-2": 0.85,
+        "cse-3": 0.85
+      },
+      "overrides": {
+        "regs-3.1": {
+          "attendance.minimum": "mem-muuoizoz4yv"
+        },
+        "regs-9.1": {
+          "library.hours": "mem-library"
+        }
+      },
+      "weights": {
+        "S": 0.424,
+        "R": 0.204,
+        "C": 0.243,
+        "I": 0.129
+      },
+      "weightHistory": 13,
+      "events": 38,
+      "queries": 61
+    }
+  ]
+}
