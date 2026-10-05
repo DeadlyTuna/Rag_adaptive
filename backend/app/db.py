@@ -16,12 +16,15 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import sqlite3
 import threading
 from pathlib import Path
 from typing import Any, Callable, Optional
 
 from .schemas import World
+
+log = logging.getLogger("adaptive-rag")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
@@ -118,6 +121,17 @@ class Database:
 
     # ---------------------------------------------------------------------------
     def load(self) -> tuple[Optional[World], dict[str, Any]]:
+        """The saved world, or (None, {}) when there is none or it can't be read — in which
+        case the database is wiped so the caller reseeds from a clean slate."""
+        try:
+            return self._load()
+        except Exception as e:  # noqa: BLE001 — a schema change or a corrupt row
+            why = f"{e.error_count()} invalid fields" if hasattr(e, "error_count") else str(e)
+            log.warning("Saved state couldn't be loaded (%s) — starting from the seeded demo.", why)
+            self.wipe()
+            return None, {}
+
+    def _load(self) -> tuple[Optional[World], dict[str, Any]]:
         cur = self.conn.cursor()
         meta = {k: json.loads(v) for k, v in cur.execute("SELECT key, value FROM meta")}
         if "world" not in meta:

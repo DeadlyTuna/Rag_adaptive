@@ -11,6 +11,7 @@ The model gets:
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 
 from ..schemas import Candidate, Classification, MemoryOp, Turn, World
@@ -35,6 +36,15 @@ When the student's message is a statement rather than a question:
 - If a correction replaced an earlier value, name both values ("80%, replacing the regulations' 75% [1][2]").
 - If the message was discarded as small talk, reply naturally and say you didn't store it only if it might have looked like information.
 - If the student said a previous answer was wrong, thank them, say whose reliability you lowered, and ask what the correct information is."""
+
+
+# Old answers cite numbers from *their* CONTEXT block; left in, the model would read
+# them as references into this turn's numbering.
+_CITE = re.compile(r"\s*\[\d+\]")
+
+
+def strip_citations(text: str) -> str:
+    return _CITE.sub("", text).strip()
 
 
 def _day(ms: int) -> str:
@@ -80,8 +90,8 @@ def build_messages(
     for t in history:
         if t.role == "user":
             messages.append({"role": "user", "content": t.text})
-        elif t.text:
-            messages.append({"role": "assistant", "content": t.text})
+        elif t.text and strip_citations(t.text):
+            messages.append({"role": "assistant", "content": strip_citations(t.text)})
     # the API wants strictly alternating turns that start with the user
     while messages and messages[0]["role"] != "user":
         messages.pop(0)

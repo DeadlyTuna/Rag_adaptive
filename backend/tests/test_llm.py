@@ -8,8 +8,8 @@ import re
 
 import httpx2
 
-from app.generator.llm import AnthropicLLM, OpenAICompatLLM
-from conftest import chat, done_turn, run
+from app.generator.llm import FALLBACK_BETA, AnthropicLLM, OpenAICompatLLM, describe_llm_error, make_llm
+from conftest import chat, done_turn, make_settings, run
 
 
 class FakeLLM:
@@ -148,6 +148,30 @@ def test_llm_classifier_extracts_unknown_facts(make_engine):
     assert m.text == "DBMS project demo is on 3 November" and m.cls == "important"
 
 
+def test_history_drops_old_citation_numbers(make_engine):
+    llm = FakeLLM(reply=lambda m: "The minimum attendance is 75% [1], per the regulations [2].")
+    eng = make_engine(llm=llm)
+    chat(eng, "What is the minimum attendance requirement?")
+    chat(eng, "And the pass mark?")
+    history = llm.calls[-1][1][:-1]
+    old = [m["content"] for m in history if m["role"] == "assistant"]
+    assert old and "The minimum attendance is 75%, per the regulations." in old
+    assert not any(re.search(r"\[\d+\]", t) for t in old)
+
+
+def test_unreadable_saved_state_is_reseeded(make_engine, tmp_path):
+    eng = make_engine()
+    chat(eng, "I have a DBMS quiz tomorrow.")
+    assert any(t.text == "I have a DBMS quiz tomorrow." for t in eng.world.turns)
+    eng.db.conn.execute("UPDATE memories SET data = '{\"broken\": true}'")
+    eng.db.conn.commit()
+    eng.db.conn.close()
+    fresh = make_engine()  # same data dir
+    assert fresh.world.memories and all(m.id for m in fresh.world.memories)
+    assert not any(t.text == "I have a DBMS quiz tomorrow." for t in fresh.world.turns)
+    assert fresh.db.load()[0] is not None  # the reseeded world was saved and reads back
+
+
 # --------------------------------------------------------------------------- real SDKs, mocked HTTP
 
 
@@ -155,12 +179,12 @@ def _sse(events: list[tuple[str, dict]]) -> bytes:
     return "".join(f"event: {name}\ndata: {json.dumps(data)}\n\n" for name, data in events).encode()
 
 
-def test_anthropic_client_streams_with_low_effort_and_cached_system():
-    seen: dict = {}
-
+def _stream_handler(seen: dict, model: str = "claude-opus-5-5"):
     def handler(request: httpx2.Request) -> httpx2.Response:
         seen["body"] = json.loads(request.content)
-        msg = {"id": "msg_1", "type": "message", "role": "assistant", "model": "claude-sonnet-5-5", "content": [],
+        seen["url"] = str(request.url)
+        seen["beta"] = request.headers.get("anthropic-beta", "")
+        msg = {"id": "msg_1", "type": "message", "role": "assistant", "model": model, "content": [],
                "stop_reason": None, "stop_sequence": None, "usage": {"input_tokens": 10, "output_tokens": 0}}
         body = _sse([
             ("message_start", {"type": "message_start", "message": msg}),
@@ -173,36 +197,102 @@ def test_anthropic_client_streams_with_low_effort_and_cached_system():
         ])
         return httpx2.Response(200, headers={"content-type": "text/event-stream"}, content=body)
 
-    llm = AnthropicLLM("sk-test", "claude-sonnet-5-5", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)))
+    return handler
 
+
+def _collect(llm) -> str:
     async def go():
         return "".join([t async for t in llm.stream("SYSTEM", [{"role": "user", "content": "hi"}])])
 
-    assert run(go()) == "80% [1]."
+    return run(go())
+
+
+def test_anthropic_client_streams_with_low_effort_cached_system_and_fallbacks():
+    seen: dict = {}
+    llm = AnthropicLLM("sk-test", "claude-opus-5-5", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(_stream_handler(seen))))
+    assert _collect(llm) == "80% [1]."
     body = seen["body"]
-    assert body["model"] == "claude-sonnet-5-5" and body["stream"] is True
-    assert body["output_config"] == {"effort": "low"}
+    assert body["model"] == "claude-opus-5-5" and body["stream"] is True
+    assert body["max_tokens"] == 64000
+    # Opus 5.5 can't turn thinking off and defaults to medium effort — low is explicit
+    assert body["output_config"] == {"effort": "low"} and "thinking" not in body
     assert body["system"][0]["cache_control"] == {"type": "ephemeral"}
     assert "temperature" not in body
+    # server-side refusal fallback
+    assert body["fallbacks"] == "default"
+    assert FALLBACK_BETA in seen["beta"].split(",")
+    assert "beta=true" in seen["url"]
 
 
-def test_anthropic_structured_output_request():
+def test_anthropic_client_skips_fallbacks_for_models_without_them():
     seen: dict = {}
+    llm = AnthropicLLM("sk-test", "claude-haiku-4-5", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(_stream_handler(seen, "claude-haiku-4-5"))))
+    assert _collect(llm) == "80% [1]."
+    assert "fallbacks" not in seen["body"] and "output_config" not in seen["body"]
+    assert FALLBACK_BETA not in seen["beta"]
 
+
+def _json_handler(seen: dict, model: str):
     def handler(request):
         seen["body"] = json.loads(request.content)
         return httpx2.Response(200, json={
-            "id": "msg_2", "type": "message", "role": "assistant", "model": "claude-haiku-4-5-20251001",
+            "id": "msg_2", "type": "message", "role": "assistant", "model": model,
             "content": [{"type": "text", "text": json.dumps({"label": "temporary"})}],
             "stop_reason": "end_turn", "stop_sequence": None, "usage": {"input_tokens": 5, "output_tokens": 5},
         })
 
-    llm = AnthropicLLM("sk-test", "claude-sonnet-5-5", "claude-haiku-4-5-20251001", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)))
-    out = run(llm.complete_json("SYS", "Message: I have a quiz today", {"type": "object", "properties": {}, "additionalProperties": False}))
+    return handler
+
+
+SCHEMA = {"type": "object", "properties": {}, "additionalProperties": False}
+
+
+def test_anthropic_structured_output_defaults_to_the_answer_model():
+    seen: dict = {}
+    llm = AnthropicLLM("sk-test", "claude-opus-5-5", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(_json_handler(seen, "claude-opus-5-5"))))
+    out = run(llm.complete_json("SYS", "Message: I have a quiz today", SCHEMA))
     assert out == {"label": "temporary"}
-    assert seen["body"]["model"] == "claude-haiku-4-5-20251001"
-    assert seen["body"]["output_config"]["format"]["type"] == "json_schema"
+    body = seen["body"]
+    assert body["model"] == "claude-opus-5-5" and body["max_tokens"] == 16000
+    assert body["output_config"]["format"]["type"] == "json_schema"
+    assert body["output_config"]["effort"] == "low"
+
+
+def test_anthropic_classifier_model_is_configurable():
+    seen: dict = {}
+    llm = AnthropicLLM("sk-test", "claude-opus-5-5", "claude-haiku-4-5", http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(_json_handler(seen, "claude-haiku-4-5"))))
+    run(llm.complete_json("SYS", "Message: hi", SCHEMA))
+    assert seen["body"]["model"] == "claude-haiku-4-5"
     assert "effort" not in seen["body"]["output_config"]  # Haiku 4.5 rejects effort
+
+
+def test_anthropic_provider_works_without_a_key(tmp_path, monkeypatch):
+    # the SDK can resolve ANTHROPIC_AUTH_TOKEN or an `ant auth login` profile itself
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    s = make_settings(tmp_path, llm_provider="anthropic", anthropic_api_key="", anthropic_model="claude-opus-5-5", anthropic_classifier_model="")
+    llm = make_llm(s)
+    assert isinstance(llm, AnthropicLLM) and llm.name == "claude-opus-5-5" and llm.json_model == "claude-opus-5-5"
+    # auto mode still needs a key (or an OpenAI-compatible URL) before it picks a provider
+    assert make_llm(make_settings(tmp_path, llm_provider="auto")) is None
+
+
+def test_anthropic_errors_become_readable_log_lines():
+    def fail(status):
+        return httpx2.MockTransport(lambda r: httpx2.Response(status, json={"type": "error", "error": {"type": "x", "message": "nope"}}))
+
+    async def go(status):
+        llm = AnthropicLLM("sk-bad", "claude-opus-5-5", http_client=httpx2.AsyncClient(transport=fail(status)))
+        llm.client = llm.client.with_options(max_retries=0)
+        try:
+            await llm.complete_json("S", "u", SCHEMA)
+        except Exception as e:  # noqa: BLE001
+            return describe_llm_error(e)
+
+    assert "ANTHROPIC_API_KEY" in run(go(401))
+    assert "ANTHROPIC_MODEL" in run(go(404))
+    assert "rate limited" in run(go(429))
+    assert "nope" in run(go(400))
+    assert "no Claude credentials" in describe_llm_error(TypeError("Could not resolve authentication method. Expected one of api_key, auth_token, or credentials"))
 
 
 def test_openai_compatible_client_streams_tokens():

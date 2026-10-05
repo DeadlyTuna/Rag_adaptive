@@ -30,7 +30,7 @@ from .config import BACKEND_DIR, Settings
 from .db import Database
 from .embeddings import make_embedder
 from .forgetting import strength_at
-from .generator.llm import make_llm
+from .generator.llm import describe_llm_error, make_llm
 from .generator.prompts import SYSTEM_PROMPT, build_messages
 from .generator.template import ARITH, compose, detect_intent
 from .knowledge_base import ingest, parse_upload, extract_text
@@ -195,7 +195,7 @@ class Engine:
                 pred = await self.llm_classifier.apredict(text)
                 predictor = Precomputed("llm", pred)
             except Exception as e:  # noqa: BLE001
-                log.warning("LLM classifier failed (%s) — falling back to the trained model / rules.", e)
+                log.warning("LLM classifier failed (%s) — falling back to the trained model / rules.", describe_llm_error(e))
                 predictor = self.ml
         elif self.s.classifier in ("ml", "llm"):
             predictor = self.ml
@@ -351,7 +351,7 @@ class Engine:
                 model = self.llm.name
                 citations = self._parse_citations(answer, retrieval.candidates)
             except Exception as e:  # noqa: BLE001
-                log.warning("LLM generation failed (%s) — using the template answer.", e)
+                log.warning("LLM generation failed (%s) — using the template answer.", describe_llm_error(e))
                 if answer:
                     raise
                 use_llm = False

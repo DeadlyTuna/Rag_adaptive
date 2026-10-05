@@ -41,8 +41,9 @@ class Settings:
     # OPENAI_BASE_URL is set, else none (template answers)
     llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "auto"))
     anthropic_api_key: str = field(default_factory=lambda: _env("ANTHROPIC_API_KEY"))
-    anthropic_model: str = field(default_factory=lambda: _env("ANTHROPIC_MODEL", "claude-sonnet-5-5"))
-    anthropic_classifier_model: str = field(default_factory=lambda: _env("ANTHROPIC_CLASSIFIER_MODEL", "claude-haiku-4-5-20251001"))
+    anthropic_model: str = field(default_factory=lambda: _env("ANTHROPIC_MODEL", "claude-opus-5-5"))
+    # empty = the same model as the answers
+    anthropic_classifier_model: str = field(default_factory=lambda: _env("ANTHROPIC_CLASSIFIER_MODEL"))
     openai_base_url: str = field(default_factory=lambda: _env("OPENAI_BASE_URL"))
     openai_api_key: str = field(default_factory=lambda: _env("OPENAI_API_KEY"))
     openai_model: str = field(default_factory=lambda: _env("OPENAI_MODEL", "llama3.2"))
