@@ -1,0 +1,162 @@
+[
+  {
+    "text": "My name is Harsh.",
+    "label": "persistent"
+  },
+  {
+    "text": "I prefer concise answers.",
+    "label": "persistent"
+  },
+  {
+    "text": "Call me Ananya.",
+    "label": "persistent"
+  },
+  {
+    "text": "I'm in ECE, second year.",
+    "label": "persistent"
+  },
+  {
+    "text": "My attendance is 82%.",
+    "label": "persistent"
+  },
+  {
+    "text": "I like answers with examples.",
+    "label": "persistent"
+  },
+  {
+    "text": "Please always reply in short bullet points.",
+    "label": "persistent"
+  },
+  {
+    "text": "My department is mechanical.",
+    "label": "persistent"
+  },
+  {
+    "text": "The professor changed the deadline.",
+    "label": "important"
+  },
+  {
+    "text": "The HoD announced that labs are mandatory this semester.",
+    "label": "important"
+  },
+  {
+    "text": "The registrar's notice says fee payment closes on 20 October.",
+    "label": "important"
+  },
+  {
+    "text": "Our project review has been moved to week 11.",
+    "label": "important"
+  },
+  {
+    "text": "The minimum CGPA for a minor is 7.5.",
+    "label": "important"
+  },
+  {
+    "text": "Prof. Rao said CAT-2 marks will be on the portal.",
+    "label": "important"
+  },
+  {
+    "text": "Hall tickets are issued only after fee clearance, per the official circular.",
+    "label": "important"
+  },
+  {
+    "text": "There is a new rule about phones in the library.",
+    "label": "important"
+  },
+  {
+    "text": "Actually, your previous answer was wrong.",
+    "label": "correction"
+  },
+  {
+    "text": "No, the library closes at 9 pm now.",
+    "label": "correction"
+  },
+  {
+    "text": "That's wrong — the pass mark is 45 now.",
+    "label": "correction"
+  },
+  {
+    "text": "The hostel in-time was changed to 10 pm.",
+    "label": "correction"
+  },
+  {
+    "text": "Our department raised the attendance requirement to 85%.",
+    "label": "correction"
+  },
+  {
+    "text": "Your last answer used the wrong regulation.",
+    "label": "correction"
+  },
+  {
+    "text": "Actually the minimum attendance is 80% for CSE.",
+    "label": "correction"
+  },
+  {
+    "text": "The warden said the hostel curfew is 10:30 pm now.",
+    "label": "correction"
+  },
+  {
+    "text": "I have an exam tomorrow.",
+    "label": "temporary"
+  },
+  {
+    "text": "I have a DBMS quiz today.",
+    "label": "temporary"
+  },
+  {
+    "text": "I'm stuck in traffic right now.",
+    "label": "temporary"
+  },
+  {
+    "text": "I have a viva this afternoon.",
+    "label": "temporary"
+  },
+  {
+    "text": "My lab partner is absent this week.",
+    "label": "temporary"
+  },
+  {
+    "text": "I'm going home tonight.",
+    "label": "temporary"
+  },
+  {
+    "text": "Remind me that I have a presentation tomorrow.",
+    "label": "temporary"
+  },
+  {
+    "text": "I'm in the library at the moment.",
+    "label": "temporary"
+  },
+  {
+    "text": "What's 2+2?",
+    "label": "irrelevant"
+  },
+  {
+    "text": "Hi there!",
+    "label": "irrelevant"
+  },
+  {
+    "text": "Thanks, that helps.",
+    "label": "irrelevant"
+  },
+  {
+    "text": "What's the weather like today?",
+    "label": "irrelevant"
+  },
+  {
+    "text": "Tell me a joke.",
+    "label": "irrelevant"
+  },
+  {
+    "text": "How are you?",
+    "label": "irrelevant"
+  },
+  {
+    "text": "What is the minimum attendance requirement?",
+    "label": "irrelevant"
+  },
+  {
+    "text": "When can I write my FAT?",
+    "label": "irrelevant"
+  }
+]

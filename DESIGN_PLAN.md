@@ -503,7 +503,18 @@ The store consumes these in order, so the UI choreography is identical in demo a
 
 Set `NEXT_PUBLIC_API_URL` to switch from the in-browser demo engine to the real backend.
 
-| Method & path | Body → Response |
+**Implemented.** The contract below was the plan; the as-built API lives in `backend/app/main.py`
+(interactive docs at `http://localhost:8000/docs`) and is summarised, field by field, in the
+API table of [BACKEND_HANDOFF.md](BACKEND_HANDOFF.md#api-implemented). Differences from the plan:
+
+- the chat stream adds a `user` event first and a `patch` event `{memories, chunks, positions, events}`
+  right after `memory_ops`; the body also takes `user_turn_id` / `assistant_turn_id`;
+- `GET /api/state` returns the whole World plus `clockOffset` and `serverNow`;
+- feedback returns `{weights, feedback, deltas, events}` and answers `409` for a second verdict;
+- added: `POST /api/reset`, `POST /api/documents/sample`, `GET /api/classifier/eval`, `GET /api/health`;
+- `POST /api/retrieve` returns `{query, candidates}`; `PUT /api/weights` takes an optional `label`.
+
+| Method & path | Body → Response (original plan) |
 |---|---|
 | `POST /api/chat` | `{ message, session_id }` → **SSE stream** of the events in §7.3 |
 | `POST /api/feedback` | `{ turn_id, verdict: 'helpful'│'not_helpful', reason?, target_id? }` → `{ weights, deltas, memory_ops }` |

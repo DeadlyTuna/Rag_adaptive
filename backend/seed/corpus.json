@@ -1,0 +1,261 @@
+{
+  "documents": [
+    {
+      "id": "regs",
+      "title": "Academic Regulations 2024",
+      "issuer": "Office of the Dean of Academics",
+      "published": "2024-07-01",
+      "sections": [
+        {
+          "section": "1.2",
+          "title": "Academic year",
+          "text": "The academic year has two regular semesters, Fall and Winter, of about 18 weeks each, followed by an optional summer term for re-registering failed courses.",
+          "importance": 0.45
+        },
+        {
+          "section": "2.1",
+          "title": "Credits",
+          "text": "Each course carries between 1 and 4 credits. Students must register for 16 to 27 credits per semester. A lighter load needs approval from the Dean of Academics.",
+          "importance": 0.5
+        },
+        {
+          "section": "3.1",
+          "title": "Minimum attendance",
+          "text": "Students must maintain a minimum attendance of 75% in every course, counted from the first day of instruction to the last instructional day. Theory and laboratory attendance are calculated separately.",
+          "importance": 0.75,
+          "claims": [
+            {
+              "slot": "attendance.minimum",
+              "value": "75%"
+            }
+          ]
+        },
+        {
+          "section": "3.2",
+          "title": "Condonation",
+          "text": "Students whose attendance falls short of the minimum because of documented medical reasons may apply for condonation of up to 10% through the Head of Department, within one week of the attendance cut-off date.",
+          "importance": 0.65
+        },
+        {
+          "section": "3.3",
+          "title": "Debarment",
+          "text": "Students below the minimum attendance requirement in a course are debarred from writing the Final Assessment Test (FAT) of that course and must re-register for it.",
+          "importance": 0.7
+        },
+        {
+          "section": "4.1",
+          "title": "Continuous Assessment Tests",
+          "text": "Each theory course has two Continuous Assessment Tests, CAT-1 and CAT-2, each conducted for 50 marks and scaled to 15% of the course total. Digital assignments and quizzes make up a further 30%.",
+          "importance": 0.6
+        },
+        {
+          "section": "4.2",
+          "title": "Final Assessment Test",
+          "text": "The Final Assessment Test (FAT) is held at the end of the semester for 100 marks and scaled to 40% of the course total. FAT dates are published by the Controller of Examinations.",
+          "importance": 0.65
+        },
+        {
+          "section": "4.3",
+          "title": "FAT eligibility",
+          "text": "A student may write the FAT of a course only if they meet the minimum attendance requirement and have attempted at least one of the two CATs. Hall tickets are issued only to eligible students.",
+          "importance": 0.75
+        },
+        {
+          "section": "5.1",
+          "title": "Passing a course",
+          "text": "To pass a course, a student must score at least 50 out of 100 in the overall course total and at least 40 out of 100 in the FAT.",
+          "importance": 0.7,
+          "claims": [
+            {
+              "slot": "pass.marks",
+              "value": "50 marks"
+            }
+          ]
+        },
+        {
+          "section": "5.2",
+          "title": "Grades",
+          "text": "Grades are awarded as S (91–100), A (81–90), B (71–80), C (61–70), D (55–60), E (50–54) and F (below 50 or absent). Grade points run from 10 for S down to 0 for F.",
+          "importance": 0.55
+        },
+        {
+          "section": "6.1",
+          "title": "Re-examination",
+          "text": "Students who fail a course, or miss the FAT for a valid reason, may apply for re-examination within five days of the results. A re-examination fee applies per course.",
+          "importance": 0.55
+        },
+        {
+          "section": "7.1",
+          "title": "Academic integrity",
+          "text": "Malpractice in any assessment, including the use of unauthorised material or devices, leads to cancellation of that assessment and may lead to suspension.",
+          "importance": 0.5
+        },
+        {
+          "section": "8.1",
+          "title": "Fee payment",
+          "text": "Semester fees must be paid before the registration deadline. A late fee of ₹1,000 per week applies for up to three weeks, after which the registration is cancelled.",
+          "importance": 0.55
+        },
+        {
+          "section": "9.1",
+          "title": "Library hours",
+          "text": "The central library is open from 8 am to 8 pm on weekdays and from 9 am to 5 pm on Saturdays. It is closed on Sundays and public holidays.",
+          "importance": 0.45,
+          "claims": [
+            {
+              "slot": "library.hours",
+              "value": "8 am – 8 pm"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exams",
+      "title": "Examination Guidelines — Winter 2026",
+      "issuer": "Controller of Examinations",
+      "published": "2026-08-12",
+      "sections": [
+        {
+          "section": "1",
+          "title": "Hall tickets",
+          "text": "Hall tickets are released on the student portal one week before the FAT. Students without a hall ticket are not admitted to the examination hall.",
+          "importance": 0.6
+        },
+        {
+          "section": "2",
+          "title": "Reporting time",
+          "text": "Students must be seated 15 minutes before each exam starts. Late entry is allowed for the first 30 minutes only.",
+          "importance": 0.5
+        },
+        {
+          "section": "3",
+          "title": "Permitted items",
+          "text": "Only a transparent pouch, pens and an approved non-programmable calculator are permitted. Mobile phones and smart watches must be left outside the hall.",
+          "importance": 0.45
+        },
+        {
+          "section": "4",
+          "title": "Make-up tests",
+          "text": "Make-up tests for a missed CAT are held only for students with approved medical or official leave, within two weeks of the missed test.",
+          "importance": 0.5
+        },
+        {
+          "section": "5",
+          "title": "Results and re-evaluation",
+          "text": "FAT results are published on the portal within three weeks of the last exam. Students can request a re-evaluation within five days of the results.",
+          "importance": 0.5
+        },
+        {
+          "section": "6",
+          "title": "FAT schedule",
+          "text": "The Winter 2026 FAT schedule runs for three weeks starting 17 November. Timetables are released department by department.",
+          "importance": 0.6
+        }
+      ]
+    },
+    {
+      "id": "hostel",
+      "title": "Hostel Handbook",
+      "issuer": "Chief Warden's Office",
+      "published": "2025-06-02",
+      "sections": [
+        {
+          "section": "1",
+          "title": "In-time",
+          "text": "Residents must return to the hostel by 9:30 pm every day. Late entries are recorded, and repeated late entries are reported to parents.",
+          "importance": 0.5,
+          "claims": [
+            {
+              "slot": "hostel.curfew",
+              "value": "9:30 pm"
+            }
+          ]
+        },
+        {
+          "section": "2",
+          "title": "Visitors",
+          "text": "Visitors are allowed in the hostel lobby from 4 pm to 7 pm. Visitors are not permitted inside rooms.",
+          "importance": 0.35
+        },
+        {
+          "section": "3",
+          "title": "Mess timings",
+          "text": "Breakfast is served from 7 to 9 am, lunch from 12 to 2 pm and dinner from 7:30 to 9:30 pm.",
+          "importance": 0.35
+        },
+        {
+          "section": "4",
+          "title": "Leave",
+          "text": "Residents going home must apply for leave on the hostel portal at least one day in advance and get the warden's approval.",
+          "importance": 0.4
+        },
+        {
+          "section": "5",
+          "title": "Room maintenance",
+          "text": "Maintenance requests are raised on the hostel portal and are usually resolved within 48 hours.",
+          "importance": 0.3
+        }
+      ]
+    },
+    {
+      "id": "cse",
+      "title": "CSE Department Handbook",
+      "issuer": "Department of Computer Science and Engineering",
+      "published": "2025-07-15",
+      "sections": [
+        {
+          "section": "1",
+          "title": "Lab records",
+          "text": "Lab records must be submitted every week and are evaluated as part of the laboratory component. Late submissions lose 10% of the marks for that experiment.",
+          "importance": 0.5
+        },
+        {
+          "section": "2",
+          "title": "Project reviews",
+          "text": "Mini-project reviews happen in weeks 6, 10 and 14 of the semester. Each review is evaluated by a two-member faculty panel.",
+          "importance": 0.45
+        },
+        {
+          "section": "3",
+          "title": "Faculty advisors",
+          "text": "Every student is assigned a faculty advisor who approves course registration and can be met during posted office hours.",
+          "importance": 0.4
+        }
+      ]
+    }
+  ],
+  "sample": {
+    "id": "circular",
+    "title": "CSE Department Circular 2025/14",
+    "issuer": "Head of Department, CSE",
+    "published": "2025-06-20",
+    "sections": [
+      {
+        "section": "1",
+        "title": "Attendance requirement",
+        "text": "With effect from the Winter 2025 semester, the minimum attendance requirement for all CSE courses is 80%. The university's condonation rules continue to apply.",
+        "importance": 0.8,
+        "claims": [
+          {
+            "slot": "attendance.minimum",
+            "value": "80%",
+            "scope": "department"
+          }
+        ]
+      },
+      {
+        "section": "2",
+        "title": "Laboratory attendance",
+        "text": "Laboratory attendance is counted separately from theory and must also be at least 80% for CSE students.",
+        "importance": 0.6
+      },
+      {
+        "section": "3",
+        "title": "Effect on the regulations",
+        "text": "This circular supersedes clause 3.1 of the Academic Regulations 2024 for students of the Department of CSE.",
+        "importance": 0.55
+      }
+    ]
+  }
+}

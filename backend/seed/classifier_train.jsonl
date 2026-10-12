@@ -1,0 +1,220 @@
+{"text": "I'm Priya.", "label": "persistent"}
+{"text": "My name's Rohan, by the way.", "label": "persistent"}
+{"text": "You can call me Sid.", "label": "persistent"}
+{"text": "I study computer science.", "label": "persistent"}
+{"text": "I'm a third year student.", "label": "persistent"}
+{"text": "I am from the IT department.", "label": "persistent"}
+{"text": "My branch is EEE.", "label": "persistent"}
+{"text": "I'm in civil engineering, fifth semester.", "label": "persistent"}
+{"text": "My roll number is 21BCE1043.", "label": "persistent"}
+{"text": "My CGPA is 8.4.", "label": "persistent"}
+{"text": "My attendance in DBMS is 71%.", "label": "persistent"}
+{"text": "My current attendance stands at 88 percent.", "label": "persistent"}
+{"text": "I prefer detailed explanations.", "label": "persistent"}
+{"text": "I like short answers.", "label": "persistent"}
+{"text": "Please keep your answers brief.", "label": "persistent"}
+{"text": "I want step by step explanations.", "label": "persistent"}
+{"text": "Always give me examples when you explain something.", "label": "persistent"}
+{"text": "Please use bullet points in your replies.", "label": "persistent"}
+{"text": "I prefer answers in simple English.", "label": "persistent"}
+{"text": "Give me the answer first and the reasoning after.", "label": "persistent"}
+{"text": "I'm doing a minor in data science.", "label": "persistent"}
+{"text": "I live in the girls' hostel, block A.", "label": "persistent"}
+{"text": "I'm a day scholar, I don't stay in the hostel.", "label": "persistent"}
+{"text": "I'm taking Operating Systems and Compiler Design this semester.", "label": "persistent"}
+{"text": "My faculty advisor is Dr. Mehta.", "label": "persistent"}
+{"text": "I'm left-handed, so I need a left-handed desk in exams.", "label": "persistent"}
+{"text": "I am a hosteller in block D.", "label": "persistent"}
+{"text": "My major is mechanical engineering.", "label": "persistent"}
+{"text": "I love answers that include a quick summary at the end.", "label": "persistent"}
+{"text": "Keep replies concise please.", "label": "persistent"}
+{"text": "My year of admission is 2024.", "label": "persistent"}
+{"text": "I'm part of the robotics club.", "label": "persistent"}
+{"text": "I have a scholarship that needs a CGPA of 8.", "label": "persistent"}
+{"text": "My semester is the fourth one.", "label": "persistent"}
+{"text": "I'm an exchange student from Germany.", "label": "persistent"}
+{"text": "Please always mention the source of a rule.", "label": "persistent"}
+{"text": "I don't like long paragraphs, keep it tight.", "label": "persistent"}
+{"text": "My mentor is Professor Iyer.", "label": "persistent"}
+{"text": "My attendance is around 76%.", "label": "persistent"}
+{"text": "I'm in the biotech department.", "label": "persistent"}
+{"text": "I study in the evening batch.", "label": "persistent"}
+{"text": "My email is on the student portal already.", "label": "persistent"}
+{"text": "I want answers with the regulation section numbers.", "label": "persistent"}
+{"text": "My preferred language is English.", "label": "persistent"}
+{"text": "Call me Dev, not Devendra.", "label": "persistent"}
+{"text": "The DBMS assignment deadline is 15 November.", "label": "important"}
+{"text": "Prof. Sharma said the OS quiz will be open book.", "label": "important"}
+{"text": "The registrar announced that fee payment can be done in two instalments.", "label": "important"}
+{"text": "There's a new policy that phones must be switched off during labs.", "label": "important"}
+{"text": "The dean's office issued a notice about the convocation on 12 December.", "label": "important"}
+{"text": "Lab records must be signed by the faculty before the viva.", "label": "important"}
+{"text": "The circular says re-registration closes on 30 June.", "label": "important"}
+{"text": "Industrial training is mandatory for third years.", "label": "important"}
+{"text": "Our HoD said project reports must be at least 40 pages.", "label": "important"}
+{"text": "The warden announced that guests need to sign in at the gate.", "label": "important"}
+{"text": "The minimum credits for graduation is 160.", "label": "important"}
+{"text": "Prof. Nair told us the CAT-1 syllabus ends at unit 3.", "label": "important"}
+{"text": "The official notice says scholarship forms are due next Friday.", "label": "important"}
+{"text": "Only students with no backlogs can apply for the honours degree.", "label": "important"}
+{"text": "The faculty said late submissions lose 10% per day.", "label": "important"}
+{"text": "Hall tickets will be issued from the exam cell next week.", "label": "important"}
+{"text": "The registrar's office is closed on second Saturdays.", "label": "important"}
+{"text": "Summer internships count for 2 credits.", "label": "important"}
+{"text": "The library has started a book bank for first years.", "label": "important"}
+{"text": "The professor said attendance below 65% means no condonation at all.", "label": "important"}
+{"text": "Students must carry their ID cards in the exam hall.", "label": "important"}
+{"text": "The placement cell requires a minimum CGPA of 7 to register.", "label": "important"}
+{"text": "Mess fees for the next semester must be paid by 5 January.", "label": "important"}
+{"text": "The exam cell announced that results will be out on 20 December.", "label": "important"}
+{"text": "Our course coordinator said the mini project review is in week 10.", "label": "important"}
+{"text": "There is a rule that calculators must be non-programmable.", "label": "important"}
+{"text": "The department requires two industry certifications before graduation.", "label": "important"}
+{"text": "Prof. Gupta mentioned the compiler lab will have an extra session on Saturdays.", "label": "important"}
+{"text": "According to the notice, makeup exams are only for medical cases.", "label": "important"}
+{"text": "The dean said the semester will end a week early.", "label": "important"}
+{"text": "The OS project needs to be submitted on the LMS, not by email.", "label": "important"}
+{"text": "The deadline for the elective choice form is this month's end.", "label": "important"}
+{"text": "Hostel residents must vacate rooms during the winter break.", "label": "important"}
+{"text": "The university made the anti-ragging affidavit compulsory.", "label": "important"}
+{"text": "Our faculty said assignments are worth 10 marks in the internal assessment.", "label": "important"}
+{"text": "There's an official circular saying CAT-2 is moved online.", "label": "important"}
+{"text": "Re-evaluation requests cost 500 rupees per paper.", "label": "important"}
+{"text": "The registrar said transcripts take two weeks to process.", "label": "important"}
+{"text": "Students with arrears can't take part in placements.", "label": "important"}
+{"text": "The HoD announced a mandatory seminar on research ethics.", "label": "important"}
+{"text": "The canteen policy now bans plastic bottles.", "label": "important"}
+{"text": "The professor said we need 75 marks in the lab to get an S grade.", "label": "important"}
+{"text": "The new rule says only two leave requests are allowed per month.", "label": "important"}
+{"text": "Prof. Das said the viva questions come from the lab manual.", "label": "important"}
+{"text": "Lab manuals must be bought from the department store.", "label": "important"}
+{"text": "That's not right, the pass mark is 40 now.", "label": "correction"}
+{"text": "Actually, the library opens at 9 am.", "label": "correction"}
+{"text": "No, the curfew is 10 pm, not 9:30.", "label": "correction"}
+{"text": "Your answer was wrong about the condonation limit.", "label": "correction"}
+{"text": "That's incorrect, the minimum attendance is 85% for our branch.", "label": "correction"}
+{"text": "The department changed the attendance rule to 80 percent.", "label": "correction"}
+{"text": "Actually it was postponed to next Monday.", "label": "correction"}
+{"text": "The hostel timing was moved to 10:30 pm last month.", "label": "correction"}
+{"text": "Nope, the fee deadline was extended to the 25th.", "label": "correction"}
+{"text": "That information is outdated, the rule changed this year.", "label": "correction"}
+{"text": "Your previous reply used last year's guidelines.", "label": "correction"}
+{"text": "The earlier answer is wrong, CAT is out of 50 now.", "label": "correction"}
+{"text": "No longer 75%, our department raised it to 80%.", "label": "correction"}
+{"text": "Actually the library closes at 11 pm during exams.", "label": "correction"}
+{"text": "It's not 9:30 anymore, the in-time is 10 pm.", "label": "correction"}
+{"text": "The pass mark was lowered to 45.", "label": "correction"}
+{"text": "Wrong — FATs start on 24 November, not the 17th.", "label": "correction"}
+{"text": "That rule was revised, you only need one CAT now.", "label": "correction"}
+{"text": "You got it wrong, the regulation you quoted is outdated.", "label": "correction"}
+{"text": "The attendance requirement has been increased to 80%.", "label": "correction"}
+{"text": "No, the library is open till 10 pm on weekdays now.", "label": "correction"}
+{"text": "The deadline was changed, it's the 20th instead.", "label": "correction"}
+{"text": "Correction: the hostel curfew is 10:15 pm.", "label": "correction"}
+{"text": "That's old information, the minimum is 80% now.", "label": "correction"}
+{"text": "Your last reply cited the wrong document.", "label": "correction"}
+{"text": "Actually our department reduced it to 70%.", "label": "correction"}
+{"text": "Not correct, re-exams are in January now.", "label": "correction"}
+{"text": "The warden updated the curfew to 10 pm.", "label": "correction"}
+{"text": "The professor moved the deadline to Friday instead.", "label": "correction"}
+{"text": "Actually the pass marks were raised to 55.", "label": "correction"}
+{"text": "Your earlier answer about the library was incorrect.", "label": "correction"}
+{"text": "No, it's 80% for CSE, not 75%.", "label": "correction"}
+{"text": "The minimum attendance changed to 80 percent last semester.", "label": "correction"}
+{"text": "It's wrong, the library closes at 9 pm on Saturdays.", "label": "correction"}
+{"text": "That answer used an outdated regulation.", "label": "correction"}
+{"text": "The rule is no longer 75 percent.", "label": "correction"}
+{"text": "Actually, CAT-2 was rescheduled to week 9.", "label": "correction"}
+{"text": "Your previous response about hall tickets was wrong.", "label": "correction"}
+{"text": "Now it's 10 pm for the hostel, they updated it.", "label": "correction"}
+{"text": "The answer you gave was not right.", "label": "correction"}
+{"text": "Actually the department revised the pass mark to 50.", "label": "correction"}
+{"text": "No, the attendance limit is 80% now.", "label": "correction"}
+{"text": "The fee deadline was postponed to next week instead.", "label": "correction"}
+{"text": "I have a DBMS viva tomorrow.", "label": "temporary"}
+{"text": "I've got an OS quiz today.", "label": "temporary"}
+{"text": "I'm at the canteen right now.", "label": "temporary"}
+{"text": "I have a presentation this afternoon.", "label": "temporary"}
+{"text": "My CAT is tomorrow morning.", "label": "temporary"}
+{"text": "I'm feeling sick today.", "label": "temporary"}
+{"text": "I'm going to the library tonight.", "label": "temporary"}
+{"text": "I have a lab test this evening.", "label": "temporary"}
+{"text": "There's no class for me this week.", "label": "temporary"}
+{"text": "I'm travelling home this weekend.", "label": "temporary"}
+{"text": "I'm busy for the next hour.", "label": "temporary"}
+{"text": "My roommate is away this week.", "label": "temporary"}
+{"text": "I have a project review tomorrow.", "label": "temporary"}
+{"text": "I'm studying for the compiler exam tonight.", "label": "temporary"}
+{"text": "I'm in a lecture at the moment.", "label": "temporary"}
+{"text": "I have a doctor's appointment this morning.", "label": "temporary"}
+{"text": "I missed the bus today.", "label": "temporary"}
+{"text": "My exam is today at 2 pm.", "label": "temporary"}
+{"text": "Remind me I have a viva tomorrow.", "label": "temporary"}
+{"text": "I'm attending a workshop this week.", "label": "temporary"}
+{"text": "I'm waiting outside the exam hall right now.", "label": "temporary"}
+{"text": "I have a quiz in the next class.", "label": "temporary"}
+{"text": "I'm out of the hostel tonight.", "label": "temporary"}
+{"text": "I have an assignment due tonight.", "label": "temporary"}
+{"text": "I'm writing my CAT this afternoon.", "label": "temporary"}
+{"text": "My lab is cancelled today.", "label": "temporary"}
+{"text": "I'm on leave this week.", "label": "temporary"}
+{"text": "I have two tests tomorrow.", "label": "temporary"}
+{"text": "I'm preparing for a viva this evening.", "label": "temporary"}
+{"text": "For now I'm using the library wifi.", "label": "temporary"}
+{"text": "I have a seminar to give tomorrow.", "label": "temporary"}
+{"text": "I'm meeting my advisor this afternoon.", "label": "temporary"}
+{"text": "I've got a COA test tomorrow morning.", "label": "temporary"}
+{"text": "I'm stuck at the gate right now.", "label": "temporary"}
+{"text": "I'm sitting the makeup exam today.", "label": "temporary"}
+{"text": "I'm at home for the weekend.", "label": "temporary"}
+{"text": "Tonight I'm revising unit 4.", "label": "temporary"}
+{"text": "I have a hackathon this weekend.", "label": "temporary"}
+{"text": "I have a dentist appointment tomorrow.", "label": "temporary"}
+{"text": "I'm in the computer lab at the moment.", "label": "temporary"}
+{"text": "My quiz got shifted to the next period.", "label": "temporary"}
+{"text": "I'm attending a guest lecture this morning.", "label": "temporary"}
+{"text": "Hello!", "label": "irrelevant"}
+{"text": "Hey, good morning.", "label": "irrelevant"}
+{"text": "Thank you so much.", "label": "irrelevant"}
+{"text": "Ok cool.", "label": "irrelevant"}
+{"text": "lol", "label": "irrelevant"}
+{"text": "Bye, see you.", "label": "irrelevant"}
+{"text": "What is 5 * 6?", "label": "irrelevant"}
+{"text": "Calculate 12 + 30.", "label": "irrelevant"}
+{"text": "Is it going to rain today?", "label": "irrelevant"}
+{"text": "Tell me something funny.", "label": "irrelevant"}
+{"text": "How's your day going?", "label": "irrelevant"}
+{"text": "What is the pass mark?", "label": "irrelevant"}
+{"text": "When does the library close?", "label": "irrelevant"}
+{"text": "What's the hostel curfew?", "label": "irrelevant"}
+{"text": "Am I eligible to write the FAT?", "label": "irrelevant"}
+{"text": "How many credits do I need per semester?", "label": "irrelevant"}
+{"text": "Can I use a calculator in the exam?", "label": "irrelevant"}
+{"text": "What happens if I miss a CAT?", "label": "irrelevant"}
+{"text": "Who do I contact for condonation?", "label": "irrelevant"}
+{"text": "What's my name?", "label": "irrelevant"}
+{"text": "Do you know my attendance?", "label": "irrelevant"}
+{"text": "Where is the exam cell?", "label": "irrelevant"}
+{"text": "How do I apply for re-evaluation?", "label": "irrelevant"}
+{"text": "Which documents do I need for the hall ticket?", "label": "irrelevant"}
+{"text": "Is the library open on Sundays?", "label": "irrelevant"}
+{"text": "What's 100 divided by 4?", "label": "irrelevant"}
+{"text": "Nice, thanks!", "label": "irrelevant"}
+{"text": "Good night.", "label": "irrelevant"}
+{"text": "Who won the match yesterday?", "label": "irrelevant"}
+{"text": "Write me a poem about exams.", "label": "irrelevant"}
+{"text": "What's the capital of France?", "label": "irrelevant"}
+{"text": "Can you help me?", "label": "irrelevant"}
+{"text": "Okay, got it.", "label": "irrelevant"}
+{"text": "What is the attendance rule?", "label": "irrelevant"}
+{"text": "When are the FATs this semester?", "label": "irrelevant"}
+{"text": "How are the grades calculated?", "label": "irrelevant"}
+{"text": "Hmm interesting.", "label": "irrelevant"}
+{"text": "Haha that's funny.", "label": "irrelevant"}
+{"text": "What's 7 + 8?", "label": "irrelevant"}
+{"text": "Should I bring my ID card?", "label": "irrelevant"}
+{"text": "Tell me the minimum marks to pass.", "label": "irrelevant"}
+{"text": "Is it sunny outside?", "label": "irrelevant"}
+{"text": "Thanks for the help.", "label": "irrelevant"}
+{"text": "Hi, how's it going?", "label": "irrelevant"}
+{"text": "What does FAT stand for?", "label": "irrelevant"}

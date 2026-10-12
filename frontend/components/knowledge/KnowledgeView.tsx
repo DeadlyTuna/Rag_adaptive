@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useMemo, useRef, useState } from "react";
 import { FileUp, Sparkles } from "lucide-react";
 import type { SeedDocument } from "@/lib/engine/corpus";
+import type { IngestResult } from "@/lib/api/live";
 import { SAMPLE_CIRCULAR } from "@/lib/engine/corpus";
 import { parseUpload } from "@/lib/engine/engine";
 import { Panel } from "@/components/ui/Panel";
@@ -18,6 +19,18 @@ import { cx, dayYear } from "@/lib/format";
 import { LIVE, live } from "@/lib/api/live";
 import { useHydrated, useNow, useStore } from "@/lib/store";
 
+/** The server's chunks, in the shape the ingest animation walks through. */
+function toSeedDocument(r: IngestResult): SeedDocument {
+  const d = r.document!;
+  return {
+    id: d.id,
+    title: d.title,
+    issuer: d.issuer,
+    published: new Date(d.publishedAt).toISOString().slice(0, 10),
+    sections: r.chunks.map((c) => ({ section: c.section, title: c.title, text: c.text, importance: c.importance, claims: c.claims })),
+  };
+}
+
 export function KnowledgeView() {
   const hydrated = useHydrated();
   const world = useStore((s) => s.world);
@@ -29,6 +42,8 @@ export function KnowledgeView() {
   const now = useNow(60_000);
   const [selected, setSelected] = useState<string>("regs");
   const [incoming, setIncoming] = useState<SeedDocument | null>(null);
+  // live mode: an upload is already indexed by the time it animates — just show the result
+  const uploaded = useRef<IngestResult | null>(null);
   const [drag, setDrag] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -53,8 +68,14 @@ export function KnowledgeView() {
     if (!f) return;
     if (LIVE) {
       try {
-        await live.upload(f);
+        const r = await live.upload(f);
+        if (r.alreadyIndexed || !r.document) {
+          setError(`“${f.name}” is already in the knowledge base.`);
+          return;
+        }
         setError(null);
+        uploaded.current = r;
+        setIncoming(toSeedDocument(r));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Upload failed.");
       }
@@ -110,8 +131,19 @@ export function KnowledgeView() {
               <IngestSequence
                 doc={incoming}
                 onIndexed={() => {
-                  const r = ingest(incoming);
                   setSelected(incoming.id);
+                  if (LIVE) {
+                    const done = uploaded.current;
+                    uploaded.current = null;
+                    if (done) void useStore.getState().applyIngest(done);
+                    else
+                      void useStore
+                        .getState()
+                        .ingestSampleLive()
+                        .then((r) => r?.alreadyIndexed && setError("That document is already indexed."));
+                    return;
+                  }
+                  const r = ingest(incoming);
                   if (!r.chunkIds.length) setError("That document is already indexed.");
                 }}
                 onFinished={() => setIncoming(null)}
@@ -123,7 +155,7 @@ export function KnowledgeView() {
                 <FileUp size={18} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[14.5px] font-[600] text-foam">Drop a .txt or .md file to add it</p>
+                <p className="text-[14.5px] font-[600] text-foam">Drop a {LIVE ? ".txt, .md or .pdf" : ".txt or .md"} file to add it</p>
                 <p className="text-[13px] text-kelp">It’s split into passages, embedded and indexed — new peaks rise on the map.</p>
               </div>
               <input ref={fileRef} type="file" accept=".txt,.md,.markdown,.pdf" className="sr-only" onChange={(e) => onFiles(e.target.files)} />
