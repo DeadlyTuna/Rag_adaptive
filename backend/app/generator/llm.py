@@ -7,7 +7,7 @@ The LLM is used for two jobs, and it is never trained or modified by this system
 Providers:
   • AnthropicLLM     — Claude via the official `anthropic` SDK
   • OpenAICompatLLM  — anything that speaks the OpenAI chat-completions API:
-                       Ollama (local, free), LM Studio, Groq, OpenAI, …
+                       Gemini, Ollama (local, free), LM Studio, Groq, OpenAI, …
 """
 
 from __future__ import annotations
@@ -127,11 +127,13 @@ class OpenAICompatLLM:
         from openai import AsyncOpenAI
 
         extra = {"http_client": http_client} if http_client is not None else {}
-        self.client = AsyncOpenAI(base_url=base_url, api_key=api_key or "not-needed", timeout=timeout, max_retries=1, **extra)
+        self.client = AsyncOpenAI(base_url=base_url, api_key=api_key or "not-needed", timeout=timeout, max_retries=2, **extra)
         self.name = model
         self.json_model = json_model or model
 
-    async def stream(self, system: str, messages: list[dict], max_tokens: int = 1200) -> AsyncIterator[str]:
+    async def stream(self, system: str, messages: list[dict], max_tokens: int = 8192) -> AsyncIterator[str]:
+        # A ceiling, not a target: thinking models (e.g. Gemini) spend hidden reasoning
+        # tokens from this same budget, so a tight cap cuts the visible answer short.
         resp = await self.client.chat.completions.create(
             model=self.name,
             messages=[{"role": "system", "content": system}, *messages],
@@ -139,10 +141,15 @@ class OpenAICompatLLM:
             stream=True,
         )
         async for chunk in resp:
-            if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+            if not chunk.choices:
+                continue
+            choice = chunk.choices[0]
+            if choice.delta and choice.delta.content:
+                yield choice.delta.content
+            if choice.finish_reason == "length":
+                log.warning("The answer hit max_tokens (%d) and was cut short.", max_tokens)
 
-    async def complete_json(self, system: str, user: str, schema: dict, max_tokens: int = 400) -> dict:
+    async def complete_json(self, system: str, user: str, schema: dict, max_tokens: int = 4096) -> dict:
         msgs = [{"role": "system", "content": system}, {"role": "user", "content": user}]
         try:
             resp = await self.client.chat.completions.create(

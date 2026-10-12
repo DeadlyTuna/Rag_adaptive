@@ -317,6 +317,8 @@ def test_openai_compatible_client_streams_tokens():
     assert run(go()) == "80% [2]."
     assert seen["url"].endswith("/v1/chat/completions")
     assert seen["body"]["messages"][0] == {"role": "system", "content": "SYSTEM"}
+    # room for hidden reasoning tokens on thinking models such as Gemini
+    assert seen["body"]["max_tokens"] >= 8000
 
 
 def test_strip_citations_keeps_lines_and_handles_groups():

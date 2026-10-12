@@ -90,6 +90,7 @@ holds the prompt (`prompts.py`) and the providers (`llm.py`), chosen in `backend
 |---|---|
 | `ANTHROPIC_API_KEY=…` | **Claude**, through the official `anthropic` SDK. Defaults to `claude-opus-5-5` at `effort: low`, streamed, with the system prompt cached and server-side refusal fallbacks (`fallbacks: "default"`) turned on. `LLM_PROVIDER=anthropic` with no key uses an `ant auth login` profile instead. |
 | `OPENAI_BASE_URL=http://localhost:11434/v1` | Any **OpenAI-compatible** server — e.g. a free local model in Ollama (`ollama pull llama3.2:3b`). |
+| `OPENAI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/` | **Gemini** through the same OpenAI-compatible client (`LLM_PROVIDER=openai`, `OPENAI_API_KEY=<Gemini key>`, `OPENAI_MODEL=gemini-3.8-flash`). The free tier allows about 20 requests per model per day, one per chat message; switch `OPENAI_MODEL` to another Gemini model when one runs out. |
 | neither | **Template answers** built from the same retrieved context, so the whole demo still works offline. |
 
 `CLASSIFIER=llm` also lets the model classify messages (structured JSON output);
