@@ -26,7 +26,7 @@ All the learning lives in SQLite and the ranking weights. The LLM is never train
   - The held-out set is small, so quote the CV figure.
 - ✅ **Frontend live mode is wired** (all 9 steps below). Verified end to end with headless Chromium against uvicorn (`EMBEDDER=hash`): the 9-step script, citation chips while streaming, feedback and its 409, the clock jump expiring the exam memory, sample ingest, pin and delete, the retrieval lab and both classifier evaluations — with no browser console errors. `tsc`, ESLint and `next build` pass.
 - ⚠️ **No LLM has been run live.** The Claude and OpenAI-compatible clients are tested over mocked HTTP only; the E2E run used template answers.
-- ⚠️ **`frontend/package.json` says `eslint-config-next: ^14.2.35`** while Next is 16.3.8. With it, `npm install` fails (ERESOLVE: eslint 9) unless you pass `--legacy-peer-deps`, and `npx eslint` then fails to load `eslint-config-next/core-web-vitals`. Setting it back to `16.3.8` fixes both; it was left as is because the change came from the v2 commit.
+- ✅ **`eslint-config-next` is back to `16.3.8`**, matching Next 16.3.8. The v2 commit had set it to `^14.2.35`, which made `npm install` (and Vercel's build) fail with ERESOLVE against eslint 9. A clean `npm ci`, ESLint, `tsc` and `next build` now pass with no extra flags.
 
 ## Run it
 
