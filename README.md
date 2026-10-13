@@ -9,6 +9,10 @@ This repository holds the **web interface** (`frontend/`, Next.js) and the **bac
 engine, and switches to the backend when `NEXT_PUBLIC_API_URL` is set. The full design — concept, tokens, motion system, page specs, data
 model and API contract — is in [DESIGN_PLAN.md](DESIGN_PLAN.md).
 
+**Presentation:** a 33-slide feature tour with screenshots and speaker notes is in
+[`presentation/`](presentation) ([PowerPoint](presentation/Adaptive-RAG-Feature-Tour.pptx) ·
+[PDF](presentation/Adaptive-RAG-Feature-Tour.pdf)).
+
 ## Run it
 
 ```bash
