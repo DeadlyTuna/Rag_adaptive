@@ -9,6 +9,11 @@ This repository holds the **web interface** (`frontend/`, Next.js) and the **bac
 engine, and switches to the backend when `NEXT_PUBLIC_API_URL` is set. The full design — concept, tokens, motion system, page specs, data
 model and API contract — is in [DESIGN_PLAN.md](DESIGN_PLAN.md).
 
+**Research extensions:** twelve extensions on top of the core — scope- and time-aware facts,
+verified corrections with learned trust, private memories with crowd-verified facts,
+counterfactual answers, learned forgetting rates, clarify/abstain, consolidation and more —
+and a benchmark with ablations. See [RESEARCH.md](RESEARCH.md) and the `/research` page.
+
 **Presentation:** a 33-slide feature tour with screenshots and speaker notes is in
 [`presentation/`](presentation) ([PowerPoint](presentation/Adaptive-RAG-Feature-Tour.pptx) ·
 [PDF](presentation/Adaptive-RAG-Feature-Tour.pdf)).
@@ -33,6 +38,7 @@ Chrome, Edge, Firefox or Safari).
 | `/memory` | Everything it has learned: KPI row, a 3-D/2-D terrain of memory strength, an activity feed, the memory bank, facts that changed (version chains), and an **“As of” timeline** to rewind or replay how memory evolved. Click any memory for its record and forgetting curve. |
 | `/retrieval` | The ranking formula with live weights, a re-ranking playground, how feedback moved the weights over time, source reliability, and a classifier playground with a confusion matrix on a labelled set. |
 | `/knowledge` | The documents it answers from, their passages and embedding fingerprints, and live ingestion (drop a `.txt`/`.md` file, or add the sample department circular). |
+| `/research` | The twelve research extensions and the benchmark results. With the backend connected: a scope/time fact resolver, the learned weights per question type, student trust and corrections waiting for verification, learned forgetting rates, the stalest knowledge and upcoming reminders. |
 
 **Guided demo** — the console has a demo script (the story from the project brief):
 
@@ -113,6 +119,9 @@ the template answer and the log says why.
 | `POST /api/classify` · `GET /api/classifier/eval` | Classifier playground and its accuracy on 40 held-out sentences |
 | `POST /api/documents` · `POST /api/documents/sample` | Upload `.txt` / `.md` / `.pdf`, or add the sample circular |
 | `POST /api/clock` · `POST /api/reset` · `GET /api/health` | Demo clock, reset, what's running |
+| `GET /api/research` · `GET /api/research/resolve` | Research extensions: learned state, and what is believed for a scope / moment |
+| `GET /api/turns/{id}/counterfactual` | The answer without memories / without feedback learning / as plain RAG |
+| `POST /api/memories/{id}/verify` · `POST /api/memories/consolidate` · `POST /api/reminders/{id}/dismiss` | Settle a correction held for verification, consolidate, dismiss a reminder |
 
 Field-level details are in [BACKEND_HANDOFF.md](BACKEND_HANDOFF.md).
 
@@ -123,22 +132,28 @@ cd backend
 pytest tests
 ```
 
-44 tests, on hashed embeddings and an in-memory vector store, so nothing is downloaded and
+82 tests, on hashed embeddings and an in-memory vector store, so nothing is downloaded and
 no API key is needed. They cover the memory manager, the API routes, a parity test that
-replays the demo script against the frontend engine's recorded output, and the LLM path
+replays the demo script against the frontend engine's recorded output, the LLM path
 (the prompt and citations with a fake model; the Claude and OpenAI-compatible clients over
-mocked HTTP).
+mocked HTTP), every research extension, and the benchmark.
+
+The benchmark (`python -m bench.run`, about 30 s) compares plain RAG, the core system and
+the research extensions, with ablations — results in
+[backend/bench/RESULTS.md](backend/bench/RESULTS.md).
 
 ## Project structure
 
 ```
 backend/
   app/                 FastAPI app: engine, classifier, memory manager, retriever, generator, db
+    novelty/           the twelve research extensions (RESEARCH.md)
+  bench/               benchmark: scenarios, experiments, results
   ml/                  training script for the memory classifier
   seed/                corpus, classifier training set, held-out evaluation set
   tests/               pytest suite
 frontend/
-  app/                 routes: landing, (app)/console, memory, retrieval, knowledge
+  app/                 routes: landing, (app)/console, memory, retrieval, knowledge, research
   components/
     terrain/           WebGL knowledge terrain (three.js + custom shaders)
     landing/           scroll story sections and the fixed 3-D stage
@@ -146,6 +161,7 @@ frontend/
     memory/            scrubber, KPI tiles, memory bank, drawer, forgetting curve
     retrieval/         weights, ranking, learning curve, classifier playground
     knowledge/         ingestion sequence, passages, fingerprints
+    research/          the research page
     shell/             rail, status strip, command palette, toasts
     ui/                glyphs, buttons, panels, score bars, motion primitives
   lib/

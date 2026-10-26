@@ -16,9 +16,9 @@ from pathlib import Path
 
 from .forgetting import DAY, HOUR
 from .knowledge_base import SourceDocument, chunks_for, doc_meta_for
-from .schemas import ActivityEvent, Memory, Source, WeightPoint, Weights, World
+from .schemas import ActivityEvent, Memory, Source, UserProfile, WeightPoint, Weights, World
 
-WORLD_VERSION = 3
+WORLD_VERSION = 4
 SEED_DIR = Path(__file__).resolve().parent.parent / "seed"
 
 
@@ -168,4 +168,12 @@ def create_world(now: int) -> World:
         weight_history=weight_history,
         positions={},
         script_done=[],
+        # the students of the multi-user mode (novelty 8); Harsh is the demo's student and
+        # owns every seeded memory. Guest hasn't said which department they're in.
+        users=[
+            UserProfile(id="harsh", name="Harsh", department="CSE"),
+            UserProfile(id="arjun", name="Arjun", department="CSE"),
+            UserProfile(id="priya", name="Priya", department="ECE"),
+            UserProfile(id="guest", name="Guest"),
+        ],
     )

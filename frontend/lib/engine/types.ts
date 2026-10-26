@@ -2,7 +2,8 @@
 // Mirrors the FastAPI contract in DESIGN_PLAN.md §7–8.
 
 export type MemoryClass = "persistent" | "important" | "correction" | "temporary" | "irrelevant";
-export type MemoryStatus = "current" | "outdated" | "expired";
+// pending = held for verification, archived = faded or merged away (backend research extensions)
+export type MemoryStatus = "current" | "outdated" | "expired" | "pending" | "archived";
 export type MemoryKind = "fact" | "preference" | "profile" | "event";
 export type SourceKind = "document" | "memory";
 export type Factor = "S" | "R" | "C" | "I";
@@ -75,6 +76,28 @@ export interface Memory {
   supersededAt?: number;
   previousValue?: string;
   confirmedBy?: string; // chunk id
+  // research extensions (live backend only; absent in the in-browser demo)
+  owner?: string; // student who told us
+  shared?: boolean; // verified by a document or by several students: visible to all it applies to
+  reporters?: string[]; // students who stated this value
+  appliesTo?: string; // department the fact is scoped to, e.g. "CSE"
+  validFrom?: number; // when it became (or becomes) true
+  validTo?: number;
+  verification?: Verification;
+  mergedFrom?: string[];
+  mergedInto?: string;
+  archivedAt?: number;
+}
+
+export interface Verification {
+  score: number;
+  threshold: number;
+  accepted: boolean;
+  reasons: string[];
+  against?: string;
+  againstValue?: string;
+  resolvedBy?: "document" | "crowd" | "moderator";
+  resolvedAt?: number;
 }
 
 export type SpanKind = "value" | "topic" | "time" | "cue" | "entity";
@@ -141,9 +164,11 @@ export interface Retrieval {
   pool: number; // candidates that passed the similarity stage
   preferences: { id: string; text: string }[]; // standing context, always applied
   ping: [number, number];
+  intentGroup?: string; // the question type whose learned weights were used
+  groupShare?: number; // how much of the weights came from that type (1 − λ)
 }
 
-export type MemoryOpKind = "add" | "replace" | "reinforce" | "expire" | "flag" | "confirm" | "discard";
+export type MemoryOpKind = "add" | "replace" | "reinforce" | "expire" | "flag" | "confirm" | "discard" | "quarantine" | "corroborate" | "schedule";
 export interface MemoryOp {
   kind: MemoryOpKind;
   memoryId?: string;
@@ -165,6 +190,22 @@ export interface Feedback {
   deltas?: Weights;
   reliability?: { id: string; from: number; to: number };
   at: number;
+  propagated?: { id: string; from: number; to: number }[];
+  intentGroup?: string;
+}
+
+export interface Answerability {
+  confidence: number;
+  mode: "answer" | "clarify" | "abstain";
+  reasons: string[];
+}
+
+export interface TurnContext {
+  user?: string;
+  department?: string;
+  scope?: string;
+  asOf?: number;
+  label?: string;
 }
 
 export type TurnStatus = "classifying" | "retrieving" | "streaming" | "done" | "error";
@@ -185,6 +226,9 @@ export interface Turn {
   status?: TurnStatus;
   feedback?: Feedback;
   error?: string;
+  model?: string; // which generator wrote it (live backend)
+  context?: TurnContext;
+  answerability?: Answerability;
 }
 
 export type EventType =
@@ -200,7 +244,16 @@ export type EventType =
   | "memory.confirmed"
   | "weights.updated"
   | "document.indexed"
-  | "document.conflict";
+  | "document.conflict"
+  | "memory.quarantined"
+  | "memory.verified"
+  | "memory.rejected"
+  | "memory.corroborated"
+  | "memory.merged"
+  | "memory.archived"
+  | "memory.scheduled"
+  | "trust.propagated"
+  | "reminder.due";
 
 export interface ActivityEvent {
   id: string;
@@ -230,4 +283,27 @@ export interface World {
   weightHistory: WeightPoint[];
   positions: Record<string, [number, number]>;
   scriptDone: string[];
+  // research extensions (live backend only)
+  users?: UserProfile[];
+  reminders?: Reminder[];
+  decay?: Record<string, { tau: number; prior: number; events: number; exposure: number; memories: number }>;
+  novelties?: string[]; // which extensions the backend has switched on
+  user?: string | null; // whose view of the world this is
+  department?: string | null;
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  department?: string;
+}
+
+export interface Reminder {
+  id: string;
+  memoryId: string;
+  owner?: string;
+  at: number;
+  title: string;
+  text: string;
+  status: "scheduled" | "due" | "dismissed" | "cancelled";
 }

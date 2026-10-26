@@ -65,6 +65,7 @@ To point the frontend at it, put `NEXT_PUBLIC_API_URL=http://localhost:8000` in 
 | `db.py` | SQLite with real columns plus a `data` JSON column. Saves are incremental. `feedback_log` is append-only. |
 | `engine.py` | Orchestrator: lock, SSE event stream, rollback of a failed turn, all actions. |
 | `main.py` | FastAPI routes. |
+| `novelty/` | The research extensions, switched with `NOVELTIES` (see [RESEARCH.md](RESEARCH.md)). `hooks.py` is where they step into the memory manager (`memory_manager.Hooks`); `schemas.View` + the `World` lookups make every read answer for one student, department and moment. |
 
 The `ml/` folder is for training, `seed/` holds the corpus, eval set and training set, and `tests/` holds the tests. The golden file is regenerated with `node --import ./register.mjs make-golden.mts` from `tests/golden`.
 
@@ -87,6 +88,14 @@ The `ml/` folder is for training, `seed/` holds the corpus, eval set and trainin
 | `POST /api/clock` | `{advance_ms}` → `{now, clockOffset, expired, events}`. |
 | `POST /api/reset` | Restores the seeded demo. |
 | `GET /api/health` | Shows which answer model, classifier, embedder and vector store are active. |
+| `POST /api/chat` `user_id` | With `multi_user`, which student is talking (`harsh`, `arjun`, `priya`, `guest`). The `done` turn carries `context` (user, department, scope, asOf, label) and `answerability` (confidence, mode, reasons); `retrieval` carries `intentGroup` and `groupShare`. |
+| `GET /api/state?user=` | That student's view: their memories and turns, shared facts, overrides that apply to them; plus `users`, `reminders`, `decay`, `novelties`. |
+| `GET /api/research` | Learned weights per question type, forgetting rates, student trust, pending corrections, reminders, staleness, the benchmark summary. |
+| `GET /api/research/resolve?slot=&user=&scope=&as_of=` | What is believed for a slot for that view, and the validity history it came from. |
+| `GET /api/turns/{id}/counterfactual` | The question re-answered without memories / without feedback learning / as plain RAG. |
+| `POST /api/memories/{id}/verify` | `{accept}` settles a pending correction (409 if it isn't pending). |
+| `POST /api/memories/consolidate` | Merge near-duplicates, archive faded memories. `PATCH /api/memories/{id}` `{status: "current"}` restores an archived one. |
+| `POST /api/reminders/{id}/dismiss` | Dismiss a reminder. |
 
 ## Frontend live mode (done — `frontend/lib/store.ts`, `lib/api/live.ts`)
 

@@ -73,6 +73,10 @@ def describe(world: World, c: Candidate, n: int) -> str:
                 meta += f" · replaced the earlier value {m.previous_value}"
             if m.expires_at:
                 meta += f" · temporary, until {_day(m.expires_at)}"
+            if m.applies_to:
+                meta += f" · applies to {m.applies_to} students only"
+            if m.shared and m.source.type == "user":
+                meta += f" · confirmed by {len(m.reporters or [])} students"
         lines = [f"[{n}] ({meta})", c.title]
         if m and m.utterance:
             lines.append(f'The student said: "{m.utterance}"')

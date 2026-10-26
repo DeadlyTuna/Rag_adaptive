@@ -164,6 +164,13 @@ class Database:
                 "seededAt": d["seededAt"],
                 "weights": d["weights"],
                 "scriptDone": d.get("scriptDone", []),
+                # novelties: small, so they live in the head rather than in tables
+                "users": d.get("users", []),
+                "trust": d.get("trust", {}),
+                "intentWeights": d.get("intentWeights", {}),
+                "intentCounts": d.get("intentCounts", {}),
+                "decay": d.get("decay", {}),
+                "reminders": d.get("reminders", []),
             }
             for k, v in {"world": head, **extra_meta}.items():
                 cur.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", (k, json.dumps(v)))

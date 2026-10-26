@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { Ping, Pulse } from "@/lib/store";
 import { cx } from "@/lib/format";
-import { TerrainRenderer, type TerrainMode, type TItem } from "./renderer";
+import { TerrainRenderer, type TerrainMode, type TerrainPalette, type TItem } from "./renderer";
 
 export interface TerrainProps {
   items: TItem[];
   mode: TerrainMode;
+  palette?: TerrainPalette;
   ping?: Ping | null;
   pulse?: Pulse | null;
   highlight?: string[];
@@ -29,6 +30,7 @@ export interface TerrainProps {
 export default function Terrain({
   items,
   mode,
+  palette = "source",
   ping,
   pulse,
   highlight,
@@ -87,6 +89,7 @@ export default function Terrain({
     }
     rRef.current = r;
     r.setMode(mode, true);
+    r.setPalette(palette);
     r.setItems(items, true);
     if (intro) r.rise();
     return () => {
@@ -99,6 +102,7 @@ export default function Terrain({
   useEffect(() => rRef.current?.setAriaLabel(ariaLabel), [ariaLabel]);
   useEffect(() => rRef.current?.setItems(items), [items]);
   useEffect(() => rRef.current?.setMode(mode), [mode]);
+  useEffect(() => rRef.current?.setPalette(palette), [palette]);
   useEffect(() => rRef.current?.setAmbient(ambient), [ambient]);
   useEffect(() => rRef.current?.setLabelMode(labels), [labels]);
   useEffect(() => rRef.current?.setHighlight(highlight ?? []), [highlight]);

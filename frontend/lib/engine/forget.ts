@@ -15,8 +15,16 @@ const BASE_TAU: Record<Memory["cls"], number> = {
 
 export const FORGET_THRESHOLD = 0.15;
 
+// The live backend can fit these time constants from how memories actually get reused
+// (backend/app/novelty/decay.py); the store passes them in so the curves drawn here match.
+let learned: Partial<Record<Memory["cls"], number>> = {};
+export function setLearnedTau(decay?: Record<string, { tau: number }> | null) {
+  learned = Object.fromEntries(Object.entries(decay ?? {}).map(([k, v]) => [k, v.tau]));
+}
+export const baseTau = (cls: Memory["cls"]) => learned[cls] ?? BASE_TAU[cls];
+
 export function tau(m: Memory, usesSoFar = m.uses.length): number {
-  return BASE_TAU[m.cls] * Math.pow(1.2, Math.min(usesSoFar, 8));
+  return baseTau(m.cls) * Math.pow(1.2, Math.min(usesSoFar, 8));
 }
 
 /** Strength in [0,1] at time t (ignores status — callers decide what outdated means). */
@@ -33,6 +41,9 @@ export function strengthAt(m: Memory, t: number): number {
 /** Status as of time t, for the "as of" scrubber. */
 export function statusAt(m: Memory, t: number): Memory["status"] | "future" {
   if (t < m.createdAt) return "future";
+  if (m.archivedAt && t >= m.archivedAt) return "archived";
+  if (m.status === "archived" && !m.archivedAt) return "archived";
+  if (m.status === "pending") return "pending";
   if (m.supersededAt && t >= m.supersededAt) return "outdated";
   if (m.status === "outdated" && !m.supersededAt) return "outdated";
   if (m.expiredAt && t >= m.expiredAt) return "expired";

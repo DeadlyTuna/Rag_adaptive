@@ -5,6 +5,7 @@ import type { Citation, Span, Turn } from "@/lib/engine/types";
 import { MorphText } from "@/components/ui/motion-bits";
 import { ClassifierStrip } from "./ClassifierStrip";
 import { FeedbackBar } from "./FeedbackBar";
+import { AnswerInsights } from "./AnswerInsights";
 import { clock, cx } from "@/lib/format";
 import { ease, spring } from "@/lib/motion";
 import { useStore, type Stage } from "@/lib/store";
@@ -205,6 +206,7 @@ export function AssistantTurn({ turn, selected }: { turn: Turn; selected: boolea
             Shaped by your preference: {r.preferences.map((p) => p.text.replace(/^Prefers /, "").toLowerCase()).join(", ")}
           </p>
         )}
+        {turn.status === "done" && <AnswerInsights turn={turn} />}
         {turn.status === "done" && !turn.intent?.startsWith("ack") && turn.intent !== "greeting" && turn.intent !== "thanks" && (
           <FeedbackBar turn={turn} />
         )}

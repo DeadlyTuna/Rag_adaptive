@@ -26,12 +26,13 @@ BASE_TAU = {
 FORGET_THRESHOLD = 0.15
 
 
-def tau(m: Memory, uses_so_far: int | None = None) -> float:
+def tau(m: Memory, uses_so_far: int | None = None, base: dict[str, float] | None = None) -> float:
+    """`base` overrides the hand-set τ per class (learned ones, novelty 5)."""
     n = len(m.uses) if uses_so_far is None else uses_so_far
-    return BASE_TAU[m.cls] * (1.2 ** min(n, 8))
+    return (base or BASE_TAU).get(m.cls, BASE_TAU[m.cls]) * (1.2 ** min(n, 8))
 
 
-def strength_at(m: Memory, t: int) -> float:
+def strength_at(m: Memory, t: int, base: dict[str, float] | None = None) -> float:
     """Strength in [0, 1] at time t (ignores status — callers decide what outdated means)."""
     if t < m.created_at:
         return 0.0
@@ -39,7 +40,7 @@ def strength_at(m: Memory, t: int) -> float:
         return 0.0
     uses = [u for u in m.uses if u <= t]
     last = max([m.created_at, *uses])
-    base = m.importance * m.confidence
+    start = m.importance * m.confidence
     if m.pinned:
-        return base
-    return base * math.exp(-(t - last) / tau(m, len(uses)))
+        return start
+    return start * math.exp(-(t - last) / tau(m, len(uses), base))

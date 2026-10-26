@@ -54,6 +54,7 @@ export function compose(
     return ` [${n + 1}]`;
   };
   const mem = (slot: string) => world.memories.find((m) => m.slot === slot && m.status === "current");
+  const learnedFrom = (m: Memory) => (m.source.type === "user" ? "you told me it changed" : `according to ${m.source.label}`);
   const style: Style = mem("user.style")?.value as Style;
   const t = userText.trim();
   const lower = t.toLowerCase();
@@ -244,8 +245,11 @@ export function compose(
   if (/\bpass(ing)?\b/i.test(t) && /\bmarks?|score\b/i.test(t)) {
     intent = "pass-marks";
     const top = retrieval.candidates[0];
-    // Answer from the top-ranked passage — so a bad ranking shows up as a bad answer.
-    if (top && top.id !== DOC_PASS && top.kind === "document") {
+    const m = mem("pass.marks");
+    if (m) {
+      text = `The pass mark is now ${m.value}${cite(m.id)} — ${learnedFrom(m)}; the regulations say 50 out of 100${cite(DOC_PASS)}. You also need at least 40 in the FAT.`;
+    } else if (top && top.id !== DOC_PASS && top.kind === "document") {
+      // Answer from the top-ranked passage — so a bad ranking shows up as a bad answer.
       text = `${bestSentence(top.text, t)}${cite(top.id)}`;
     } else {
       text =
@@ -267,7 +271,10 @@ export function compose(
 
   if (/\b(curfew|in-?time|back (to|in) the hostel|hostel)\b/i.test(t) && /\b(time|when|by|curfew|late)\b/i.test(t)) {
     intent = "curfew";
-    text = `Residents need to be back in the hostel by 9:30 pm every day${cite(DOC_CURFEW)}.`;
+    const m = mem("hostel.curfew");
+    text = m
+      ? `Residents now need to be back in the hostel by ${m.value}${cite(m.id)} — ${learnedFrom(m)}; the hostel handbook says 9:30 pm${cite(DOC_CURFEW)}.`
+      : `Residents need to be back in the hostel by 9:30 pm every day${cite(DOC_CURFEW)}.`;
     return finish(text, intent, "hostel.curfew");
   }
 

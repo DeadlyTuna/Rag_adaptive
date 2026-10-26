@@ -17,7 +17,8 @@ export type GlyphName =
   | "outdated"
   | "pin"
   | "profile"
-  | "preference";
+  | "preference"
+  | "research";
 
 const paths: Record<GlyphName, React.ReactNode> = {
   persistent: (
@@ -77,6 +78,12 @@ const paths: Record<GlyphName, React.ReactNode> = {
     </>
   ),
   expired: <path d="m4.5 4.5 7 7m0-7-7 7" />,
+  research: (
+    <>
+      <path d="M6.2 2.2h3.6M6.8 2.2v4.1L3 12.6c-.5.8.1 1.6 1 1.6h8c.9 0 1.5-.8 1-1.6L9.2 6.3V2.2" />
+      <path d="M4.6 10h6.8" />
+    </>
+  ),
   added: <path d="M8 3.2v9.6M3.2 8h9.6" />,
   ping: (
     <>

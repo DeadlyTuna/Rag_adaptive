@@ -20,6 +20,7 @@ import {
   uid,
 } from "./engine/engine";
 import { normalise } from "./engine/learn";
+import { setLearnedTau } from "./engine/forget";
 import type { SeedDocument } from "./engine/corpus";
 import { ApiError, LIVE, live, streamChat } from "./api/live";
 import type { IngestResult, ServerWorld, WorldPatch } from "./api/live";
@@ -50,6 +51,8 @@ interface Persisted {
   world: World;
   clockOffset: number;
   pace: number;
+  /** Live mode with several students: who is talking (null = the backend's default student). */
+  student?: string | null;
 }
 
 export interface AppState extends Persisted {
@@ -83,6 +86,14 @@ export interface AppState extends Persisted {
   ingestSampleLive: () => Promise<IngestResult | null>;
   /** Live mode: show the result of an upload the page already sent. */
   applyIngest: (r: IngestResult) => Promise<void>;
+  /** Live mode, several students: switch whose conversation and memories are shown. */
+  setStudent: (id: string | null) => void;
+  /** Live mode: accept or reject a correction held for verification. */
+  verifyMemory: (id: string, accept: boolean) => void;
+  /** Live mode: bring back an archived memory. */
+  restore: (id: string) => void;
+  /** Live mode: merge duplicates and archive faded memories now. */
+  consolidate: () => Promise<number>;
   selectTurn: (id: string | null) => void;
   hover: (id: string | null) => void;
   openMemory: (id: string | null) => void;
@@ -157,6 +168,7 @@ export const useStore = create<AppState>()(
       const applyServerWorld = (server: ServerWorld, opts: { toast?: boolean; scriptDone?: string[] } = {}) => {
         const { clockOffset, serverNow, ...world } = server;
         void clockOffset;
+        setLearnedTau(world.decay);
         const local = get().world;
         const known = new Set(local.events.map((e) => e.id));
         const fresh = world.events.filter((e) => !known.has(e.id));
@@ -271,7 +283,7 @@ export const useStore = create<AppState>()(
         let u = userTurn;
         let finished = false;
         try {
-          await streamChat(text, { sessionId: "demo", userTurnId: userId, assistantTurnId: asstId }, (e) => {
+          await streamChat(text, { sessionId: "demo", userTurnId: userId, assistantTurnId: asstId, userId: get().student }, (e) => {
             switch (e.type) {
               case "user":
                 u = { ...e.turn, classification: u.classification, memoryOps: u.memoryOps };
@@ -295,7 +307,11 @@ export const useStore = create<AppState>()(
                 const touched = ops.flatMap((o) => [o.memoryId, o.previousId]).filter(Boolean) as string[];
                 if (touched.length) {
                   set({
-                    pulse: { key: pulseKey++, ids: touched, kind: ops.some((o) => o.kind === "replace") ? "replace" : ops[0].kind === "flag" ? "flag" : "new" },
+                    pulse: {
+                      key: pulseKey++,
+                      ids: touched,
+                      kind: ops.some((o) => o.kind === "replace") ? "replace" : ops[0].kind === "flag" || ops[0].kind === "quarantine" ? "flag" : ops[0].kind === "corroborate" ? "confirm" : "new",
+                    },
                     announce: ops.map((o) => `${o.title}${o.detail ? ` — ${o.detail}` : ""}`).join(". "),
                   });
                 }
@@ -349,6 +365,7 @@ export const useStore = create<AppState>()(
         announce: "",
         ping: null,
         pulse: null,
+        student: null,
 
         now: () => Date.now() + get().clockOffset,
 
@@ -539,7 +556,7 @@ export const useStore = create<AppState>()(
           if (!LIVE) return;
           const seq = ++stateSeq;
           try {
-            const server = await live.state();
+            const server = await live.state(get().student);
             if (seq !== stateSeq) return; // something newer happened while this was in flight
             if (get().pending) return; // a turn started meanwhile; its own refresh follows
             applyServerWorld(server, opts);
@@ -567,6 +584,50 @@ export const useStore = create<AppState>()(
           await get().refresh();
         },
 
+        setStudent: (id) => {
+          if (get().pending || id === get().student) return;
+          stateSeq++;
+          set({ student: id, selectedTurnId: null, drawerId: null, ping: null });
+          void get().refresh({ toast: false });
+        },
+
+        verifyMemory: (id, accept) => {
+          if (!LIVE || get().pending) return;
+          live
+            .verify(id, accept)
+            .then((r) => {
+              set({ pulse: { key: pulseKey++, ids: [id], kind: accept ? "confirm" : "expire" } });
+              takeEvents(r.events);
+              return get().refresh();
+            })
+            .catch(liveError(accept ? "Accepting" : "Rejecting"));
+        },
+
+        restore: (id) => {
+          if (!LIVE || get().pending) return;
+          live
+            .patchMemory(id, { status: "current" })
+            .then(() => {
+              set({ pulse: { key: pulseKey++, ids: [id], kind: "new" } });
+              return get().refresh();
+            })
+            .catch(liveError("Restoring"));
+        },
+
+        consolidate: async () => {
+          if (!LIVE || get().pending) return 0;
+          try {
+            const r = await live.consolidate();
+            if (r.memories.length) set({ pulse: { key: pulseKey++, ids: r.memories.map((m) => m.id), kind: "replace" } });
+            takeEvents(r.events);
+            await get().refresh();
+            return r.events.length;
+          } catch (err) {
+            liveError("Consolidating")(err);
+            return 0;
+          }
+        },
+
         selectTurn: (id) => set({ selectedTurnId: id }),
         hover: (id) => set({ hoverId: id }),
         openMemory: (id) => set({ drawerId: id }),
@@ -581,7 +642,7 @@ export const useStore = create<AppState>()(
       version: WORLD_VERSION,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
-      partialize: (s): Persisted => ({ world: s.world, clockOffset: s.clockOffset, pace: s.pace }),
+      partialize: (s): Persisted => ({ world: s.world, clockOffset: s.clockOffset, pace: s.pace, student: s.student }),
       migrate: () => ({ world: createWorld(Date.now()), clockOffset: 0, pace: 1 }) as Persisted,
       merge: (persisted, current) => {
         const p = persisted as Partial<Persisted> | undefined;

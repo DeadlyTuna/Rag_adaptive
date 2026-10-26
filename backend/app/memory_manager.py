@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime, timedelta
-from typing import Callable, Optional
+from typing import Callable, Optional, Protocol
 
 from .classifier import importance_for, user_confidence
 from .forgetting import DAY
@@ -47,6 +47,19 @@ from .util import r2, uid
 
 # placer(world, item_id, near_id) — gives a new item its spot on the 2-D map
 Placer = Callable[[World, str, Optional[str]], None]
+Result = tuple[list[MemoryOp], list[ActivityEvent]]
+
+
+class Hooks(Protocol):
+    """Where the research extensions (app/novelty) step into memory writes and feedback.
+    The engine passes one only when some novelty is switched on."""
+
+    def corroborate(self, world: World, text: str, cls: Classification, now: int) -> Optional[Result]: ...
+    def annotate(self, world: World, memory: Memory, text: str, cls: Classification, now: int) -> None: ...
+    def hold(self, world: World, memory: Memory, text: str, cls: Classification, now: int) -> Optional[Result]: ...
+    def keeps_shared(self, world: World, conflict_id: str, memory: Memory) -> bool: ...
+    def stored(self, world: World, memory: Memory, now: int) -> list[ActivityEvent]: ...
+    def feedback(self, world: World, turn: Turn, fb: Feedback, preferred, rejected, cited, others) -> list[ActivityEvent]: ...
 
 
 def event(type_: str, at: int, title: str, detail: str, ref_id: Optional[str] = None) -> ActivityEvent:
@@ -85,6 +98,12 @@ def fmt_day(t: int) -> str:
     return f"{d:%a}, {d.day} {d:%b}"
 
 
+def fmt_date(t: int) -> str:
+    """'3 Oct 2025' — a date that may not be this year."""
+    d = _dt(t)
+    return f"{d.day} {d:%b %Y}"
+
+
 def fmt_weekday_time(t: int) -> str:
     """'Tue, 11:59 pm' — the browser's en-IN format, so both engines read the same."""
     d = _dt(t)
@@ -106,6 +125,12 @@ def tick(world: World, now: int) -> tuple[list[ActivityEvent], list[str]]:
             m.expired_at = m.expires_at
             events.append(event("memory.expired", m.expires_at, "Temporary memory expired", m.text, m.id))
             expired.append(m.id)
+        elif m.status == "current" and m.valid_to and m.valid_to <= now and m.superseded_by:
+            # a scheduled change has taken effect (novelty 1)
+            m.status = "outdated"
+            m.superseded_at = m.valid_to
+            nxt = world.memory(m.superseded_by)
+            events.append(event("memory.replaced", m.valid_to, "Scheduled change took effect", f"{m.text} → {nxt.text if nxt else 'the new value'}", m.superseded_by))
     world.events.extend(events)
     return events, expired
 
@@ -170,7 +195,34 @@ def knowledge_line(world: World, cls: Classification, text: str, now: int) -> tu
     return topic, clean
 
 
-def apply_statement(world: World, text: str, cls: Classification, now: int, placer: Placer) -> tuple[list[MemoryOp], list[ActivityEvent]]:
+def supersede(world: World, memory: Memory, with_kind: str, with_id: str, slot: Optional[str], now: int, scheduled: bool = False) -> Optional[str]:
+    """Link a new memory to what it replaces; returns the id to place it near on the map.
+    The old memory is kept as history (outdated), a passage keeps its text but records
+    the override. A scheduled change (valid from a later date) leaves the old fact
+    current until then — tick() switches it over."""
+    if with_kind == "memory":
+        old = world.memory(with_id)
+        if old:
+            old.superseded_by = memory.id
+            memory.supersedes = old.id
+            if scheduled:
+                old.valid_to = memory.valid_from
+            else:
+                old.status = "outdated"
+                old.superseded_at = now
+                if memory.valid_from is not None:
+                    old.valid_to = memory.valid_from
+            return old.id
+        return None
+    chunk = world.chunk(with_id)
+    if chunk and slot:
+        chunk.overridden_by = {**(chunk.overridden_by or {}), slot: memory.id}
+        memory.supersedes = f"chunk:{chunk.id}"
+        return chunk.id
+    return None
+
+
+def apply_statement(world: World, text: str, cls: Classification, now: int, placer: Placer, hooks: Optional[Hooks] = None) -> Result:
     ops: list[MemoryOp] = []
     events: list[ActivityEvent] = []
     d = slot_def(cls.slot)
@@ -195,10 +247,11 @@ def apply_statement(world: World, text: str, cls: Classification, now: int, plac
     if cls.decision == "flag-previous":
         # the last answer to an actual question — acknowledgements don't count
         prev: Optional[Turn] = None
-        for t in reversed(world.turns):
+        turns = world.conversation()
+        for t in reversed(turns):
             if t.role != "assistant" or not (t.retrieval and t.retrieval.candidates):
                 continue
-            asked = next((u for u in world.turns if u.id == t.reply_to), None)
+            asked = next((u for u in turns if u.id == t.reply_to), None)
             if asked and asked.classification and asked.classification.is_question:
                 prev = t
                 break
@@ -207,7 +260,7 @@ def apply_statement(world: World, text: str, cls: Classification, now: int, plac
         if prev and prev.retrieval:
             target = next((c for c in prev.retrieval.candidates if c.id in cited), None) or prev.retrieval.candidates[0]
         if prev and target:
-            fb, fb_events = feedback_on(world, prev, "not_helpful", "wrong_source", target.id, now)
+            fb, fb_events = feedback_on(world, prev, "not_helpful", "wrong_source", target.id, now, hooks)
             prev.feedback = fb
             events.extend(fb_events)
             ops.append(
@@ -224,6 +277,10 @@ def apply_statement(world: World, text: str, cls: Classification, now: int, plac
         return ops, events
 
     # store / replace / keep-temporarily
+    if hooks:
+        done = hooks.corroborate(world, text, cls, now)  # another student already said this
+        if done is not None:
+            return done
     label, line = knowledge_line(world, cls, text, now)
     kind = d.kind if d else ("event" if cls.label == "temporary" else "fact")
     mcls = "important" if cls.label == "irrelevant" else cls.label
@@ -250,29 +307,45 @@ def apply_statement(world: World, text: str, cls: Classification, now: int, plac
     if cls.decision == "keep-temporarily":
         memory.expires_at = expiry_for(text, now)
 
+    if hooks:
+        hooks.annotate(world, memory, text, cls, now)  # owner, scope, validity
+        if cls.decision == "replace" and cls.conflict:
+            memory.previous_value = cls.conflict.with_value
+        held = hooks.hold(world, memory, text, cls, now)  # held for verification?
+        if held is not None:
+            world.memories.append(memory)
+            placer(world, memory.id, cls.conflict.with_id if cls.conflict else None)
+            return held
+
     near: Optional[str] = None
+    scheduled = memory.valid_from is not None and memory.valid_from > now
     if cls.decision == "replace" and cls.conflict:
         c = cls.conflict
         memory.previous_value = c.with_value
-        if c.with_kind == "memory":
-            old = world.memory(c.with_id)
-            if old:
-                old.status = "outdated"
-                old.superseded_by = memory.id
-                old.superseded_at = now
-                memory.supersedes = old.id
-                near = old.id
+        if hooks and c.with_kind == "memory" and hooks.keeps_shared(world, c.with_id, memory):
+            memory.supersedes = c.with_id  # a private exception; the shared fact stays for everyone else
+            near = c.with_id
         else:
-            chunk = world.chunk(c.with_id)
-            if chunk and cls.slot:
-                chunk.overridden_by = {**(chunk.overridden_by or {}), cls.slot: memory.id}
-                memory.supersedes = f"chunk:{chunk.id}"
-                near = chunk.id
+            near = supersede(world, memory, c.with_kind, c.with_id, cls.slot, now, scheduled)
 
     world.memories.append(memory)
     placer(world, memory.id, near)
+    if hooks:
+        events.extend(hooks.stored(world, memory, now))
 
-    if cls.decision == "replace" and cls.conflict:
+    if scheduled and cls.decision == "replace" and cls.conflict:
+        c = cls.conflict
+        ops.append(
+            MemoryOp(
+                kind="schedule",
+                memory_id=memory.id,
+                previous_id=c.with_id if c.with_kind == "memory" else None,
+                title=memory.text,
+                detail=f"Takes effect {fmt_day(memory.valid_from or now)}; until then “{c.with_value}” still applies",
+            )
+        )
+        events.append(event("memory.scheduled", now, "Change scheduled", f"{label}: {c.with_value} → {memory.value or memory.text} from {fmt_day(memory.valid_from or now)}", memory.id))
+    elif cls.decision == "replace" and cls.conflict:
         c = cls.conflict
         ops.append(
             MemoryOp(
@@ -340,12 +413,15 @@ def title_for(world: World, item_id: str) -> str:
 
 
 def feedback_on(
-    world: World, turn: Turn, verdict: str, reason: Optional[str], target_id: Optional[str], now: int
+    world: World, turn: Turn, verdict: str, reason: Optional[str], target_id: Optional[str], now: int, hooks: Optional[Hooks] = None
 ) -> tuple[Feedback, list[ActivityEvent]]:
     cands = turn.retrieval.candidates if turn.retrieval else []
     before = world.weights.model_copy()
     after = before
     reliability: Optional[ReliabilityChange] = None
+    preferred = rejected = None
+    cited: list = []
+    others: list = []
 
     def set_reliability(item_id: str, fn: Callable[[float], float]) -> None:
         nonlocal reliability
@@ -400,16 +476,18 @@ def feedback_on(
             )
         )
     fb = Feedback(verdict=verdict, reason=reason, target_id=target_id, deltas=d, reliability=reliability, at=now)
+    if hooks:
+        events.extend(hooks.feedback(world, turn, fb, preferred, rejected, cited, others))
     return fb, events
 
 
 def apply_feedback(
-    world: World, turn_id: str, verdict: str, reason: Optional[str], target_id: Optional[str], now: int
+    world: World, turn_id: str, verdict: str, reason: Optional[str], target_id: Optional[str], now: int, hooks: Optional[Hooks] = None
 ) -> tuple[Optional[Feedback], list[ActivityEvent]]:
     turn = next((t for t in world.turns if t.id == turn_id), None)
     if not turn:
         return None, []
-    fb, events = feedback_on(world, turn, verdict, reason, target_id, now)
+    fb, events = feedback_on(world, turn, verdict, reason, target_id, now, hooks)
     turn.feedback = fb
     world.events.extend(events)
     return fb, events

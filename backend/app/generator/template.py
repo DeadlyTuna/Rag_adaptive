@@ -14,7 +14,7 @@ from typing import Callable, Optional
 
 from ..classifier import current_value
 from ..learning import score_of
-from ..memory_manager import fmt_weekday_time
+from ..memory_manager import fmt_day, fmt_weekday_time
 from ..schemas import Candidate, Citation, Classification, MemoryOp, Retrieval, World
 from ..text import sentences
 from ..util import r3
@@ -143,6 +143,10 @@ def compose(
         op = ops[0]
         m = world.memory(op.memory_id) if op.memory_id else None
         prev = world.memory(op.previous_id) if op.previous_id else None
+        novel = _novelty_ack(op, m, prev, cite)
+        if novel:
+            intent, text = novel
+            return text
         if cls.decision == "replace":
             if not m:
                 return None
@@ -160,6 +164,14 @@ def compose(
             intent = "ack-correction"
             frm = cls.conflict
             where = frm.with_source if frm and frm.with_kind == "document" else "what I had before"
+            if m.applies_to:
+                # a department's exception (novelty 1): the general rule still stands for everyone else
+                new_cite = cite(m.id)
+                old_cite = cite(frm.with_id if frm and frm.with_kind == "document" else (prev.id if prev else None))
+                return (
+                    f"Got it — for {m.applies_to}, {m.label.lower()} is now {m.value}{new_cite}. "
+                    f"The general {m.previous_value} from {where}{old_cite} still applies to other departments; your answers will use {m.value}."
+                )
             new_cite = cite(m.id)  # numbered first, as it reads
             old_cite = cite(frm.with_id if frm and frm.with_kind == "document" else (prev.id if prev else None))
             return (
@@ -312,8 +324,11 @@ def compose(
 
     if re.search(r"\bpass(ing)?\b", t, re.I) and re.search(r"\bmarks?|score\b", t, re.I):
         top = retrieval.candidates[0] if retrieval.candidates else None
-        # answer from the top-ranked passage — so a bad ranking shows up as a bad answer
-        if top and top.id != DOC_PASS and top.kind == "document":
+        m = mem("pass.marks")
+        if m:
+            text = f"The pass mark is now {m.value}{cite(m.id)} — {_learned_from(m)}; the regulations say 50 out of 100{cite(DOC_PASS)}. You also need at least 40 in the FAT."
+        elif top and top.id != DOC_PASS and top.kind == "document":
+            # answer from the top-ranked passage — so a bad ranking shows up as a bad answer
             text = f"{_best_sentence(top.text, t, sim)}{cite(top.id)}"
         else:
             text = (
@@ -336,7 +351,12 @@ def compose(
         return finish(text, "library-hours", "library.hours")
 
     if re.search(r"\b(curfew|in-?time|back (to|in) the hostel|hostel)\b", t, re.I) and re.search(r"\b(time|when|by|curfew|late)\b", t, re.I):
-        return finish(f"Residents need to be back in the hostel by 9:30 pm every day{cite(DOC_CURFEW)}.", "curfew", "hostel.curfew")
+        m = mem("hostel.curfew")
+        if m:
+            text = f"Residents now need to be back in the hostel by {m.value}{cite(m.id)} — {_learned_from(m)}; the hostel handbook says 9:30 pm{cite(DOC_CURFEW)}."
+        else:
+            text = f"Residents need to be back in the hostel by 9:30 pm every day{cite(DOC_CURFEW)}."
+        return finish(text, "curfew", "hostel.curfew")
 
     # ------------------------------------------------------------- generic
     top = [c for c in retrieval.candidates if c.factors.S >= 0.3]
@@ -354,6 +374,37 @@ def compose(
     else:
         text = " ".join(parts)
     return finish(text, "generic")
+
+
+def _learned_from(m) -> str:
+    return "you told me it changed" if m.source.type == "user" else f"according to {m.source.label}"
+
+
+def _novelty_ack(op: MemoryOp, m, prev, cite: Callable[[Optional[str]], str]) -> Optional[tuple[str, str]]:
+    """Acknowledgements for what only the novelties do: hold a correction for
+    verification (3), schedule a future change (1), corroborate another student (8)."""
+    if not m:
+        return None
+    if op.kind == "quarantine" and m.verification:
+        v = m.verification
+        return "ack-quarantine", (
+            f"I've noted that you say {m.label.lower()} is {m.value}{cite(m.id)}, but that contradicts {op.subject or 'the documents'}"
+            f"{cite(v.against)}, which says {v.against_value}. Until a document or another student confirms the change, I'll keep using {v.against_value}."
+        )
+    if op.kind == "schedule" and m.valid_from:
+        text = f"Noted — from {fmt_day(m.valid_from)}: {m.text}{cite(m.id)}."
+        if prev:
+            text += f" Until then, what I had before still applies: {prev.text}{cite(prev.id)}."
+        elif m.previous_value:
+            text += f" Until then, {m.previous_value} still applies."
+        return "ack-schedule", text
+    if op.kind == "corroborate":
+        n = len(m.reporters or [])
+        if m.shared:
+            where = f" in {m.applies_to}" if m.applies_to else ""
+            return "ack-corroborate", f"Thanks — {n} students have now told me this, so it's confirmed and shared with everyone{where}: {m.text}{cite(m.id)}."
+        return "ack-corroborate", f"Thanks — that matches what another student told me{cite(m.id)}. Once enough students confirm it, I'll share it with everyone."
+    return None
 
 
 def _best_sentence(text: str, query: str, sim: Callable[[str, str], float]) -> str:

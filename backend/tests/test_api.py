@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 from fastapi.testclient import TestClient
+
+from app.seed import WORLD_VERSION
 
 
 @pytest.fixture
@@ -19,6 +22,7 @@ def client(tmp_path, monkeypatch):
         "OPENAI_BASE_URL": "",
         "CLASSIFIER": "rules",
         "PIPELINE_PACING": "0",
+        "NOVELTIES": os.environ.get("TEST_API_NOVELTIES", "none"),  # tests/test_novelties.py covers them
     }.items():
         monkeypatch.setenv(k, v)
     from app.main import app
@@ -46,7 +50,7 @@ def test_health_and_state_shape(client):
     h = client.get("/api/health").json()
     assert h["answers"] == "template" and h["vectorStore"] == "numpy"
     s = client.get("/api/state").json()
-    assert s["version"] == 3 and s["scriptDone"] == [] and isinstance(s["clockOffset"], int)
+    assert s["version"] == WORLD_VERSION and s["scriptDone"] == [] and isinstance(s["clockOffset"], int)
     assert set(s["weights"]) == {"S", "R", "C", "I"}
     assert set(s["weightHistory"][0]["weights"]) == {"S", "R", "C", "I"}
     ids = {c["id"] for c in s["chunks"]} | {m["id"] for m in s["memories"]}

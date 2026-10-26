@@ -57,11 +57,28 @@ export function ProbabilityBars({ c }: { c: Classification }) {
   );
 }
 
+const OP_GLYPH: Partial<Record<MemoryOp["kind"], GlyphName>> = {
+  replace: "correction",
+  flag: "flag",
+  reinforce: "confirm",
+  discard: "irrelevant",
+  expire: "expired",
+  quarantine: "flag", // held for verification
+  corroborate: "confirm", // another student said the same
+  schedule: "temporary", // takes effect later
+};
+const OP_TONE: Partial<Record<MemoryOp["kind"], string>> = {
+  replace: "text-sodium",
+  flag: "text-flare",
+  discard: "text-kelp",
+  quarantine: "text-sodium",
+  schedule: "text-sodium",
+};
+
 export function OpChip({ op, delay = 0 }: { op: MemoryOp; delay?: number }) {
   const open = useStore((s) => s.openMemory);
-  const glyph: GlyphName =
-    op.kind === "replace" ? "correction" : op.kind === "flag" ? "flag" : op.kind === "reinforce" ? "confirm" : op.kind === "discard" ? "irrelevant" : op.kind === "expire" ? "expired" : "added";
-  const tone = op.kind === "replace" ? "text-sodium" : op.kind === "flag" ? "text-flare" : op.kind === "discard" ? "text-kelp" : "text-rhodamine";
+  const glyph: GlyphName = OP_GLYPH[op.kind] ?? "added";
+  const tone = OP_TONE[op.kind] ?? "text-rhodamine";
   const target = op.memoryId ?? op.previousId;
   return (
     <motion.button
@@ -76,7 +93,7 @@ export function OpChip({ op, delay = 0 }: { op: MemoryOp; delay?: number }) {
       <motion.span
         aria-hidden
         className="absolute inset-0 rounded-[10px]"
-        initial={{ boxShadow: `inset 0 0 0 1px ${op.kind === "replace" ? "var(--color-sodium)" : "var(--color-rhodamine)"}`, opacity: 1 }}
+        initial={{ boxShadow: `inset 0 0 0 1px ${op.kind === "replace" || op.kind === "quarantine" || op.kind === "schedule" ? "var(--color-sodium)" : "var(--color-rhodamine)"}`, opacity: 1 }}
         animate={{ opacity: 0 }}
         transition={{ delay: delay + 0.4, duration: 1.4 }}
       />

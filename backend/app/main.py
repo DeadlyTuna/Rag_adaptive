@@ -17,7 +17,7 @@ from fastapi.responses import StreamingResponse
 
 from .config import Settings
 from .engine import Engine, FeedbackExists
-from .schemas import ChatRequest, ClassifyRequest, ClockRequest, FeedbackRequest, MemoryPatch, Model, RetrieveRequest, Weights
+from .schemas import ChatRequest, ClassifyRequest, ClockRequest, FeedbackRequest, MemoryPatch, Model, RetrieveRequest, VerifyRequest, Weights
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s  %(message)s")
 log = logging.getLogger("adaptive-rag")
@@ -60,7 +60,7 @@ async def chat(body: ChatRequest, request: Request):
     eng = engine(request)
 
     async def events():
-        async for e in eng.chat(body.message, body.user_turn_id, body.assistant_turn_id):
+        async for e in eng.chat(body.message, body.user_turn_id, body.assistant_turn_id, body.user_id):
             yield f"data: {json.dumps(e, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(
@@ -90,8 +90,9 @@ async def health(request: Request):
 
 
 @app.get("/api/state", summary="The whole world: documents, chunks, memories, turns, events, weights, map positions")
-async def state(request: Request):
-    return await engine(request).fresh_state()
+async def state(request: Request, user: Optional[str] = None):
+    """With multi-user on, `user` picks the student whose view of the world is returned."""
+    return await engine(request).fresh_state(user)
 
 
 @app.post("/api/reset", summary="Wipe everything and restore the seeded demo")
@@ -118,6 +119,22 @@ async def get_memory(mem_id: str, request: Request):
 @app.patch("/api/memories/{mem_id}", summary="Pin / unpin, or mark outdated")
 async def patch_memory(mem_id: str, body: MemoryPatch, request: Request):
     res = await engine(request).patch_memory(mem_id, body.pinned, body.status)
+    if res is None:
+        raise HTTPException(404, f"No memory with id {mem_id}")
+    return res
+
+
+@app.post("/api/memories/consolidate", summary="Merge near-duplicate memories and archive faded ones (novelty 7)")
+async def consolidate(request: Request):
+    return await engine(request).consolidate_now()
+
+
+@app.post("/api/memories/{mem_id}/verify", summary="Accept or reject a correction held for verification (novelty 3)")
+async def verify_memory(mem_id: str, body: VerifyRequest, request: Request):
+    try:
+        res = await engine(request).verify_memory(mem_id, body.accept)
+    except ValueError as e:
+        raise HTTPException(409, str(e)) from e
     if res is None:
         raise HTTPException(404, f"No memory with id {mem_id}")
     return res
@@ -179,6 +196,35 @@ async def upload(request: Request, file: UploadFile = File(...)):
 @app.post("/api/documents/sample", summary="Index the sample CSE department circular (80% attendance)")
 async def upload_sample(request: Request):
     return await engine(request).ingest_sample()
+
+
+# --------------------------------------------------------------------------- research (novelties)
+
+
+@app.get("/api/turns/{turn_id}/counterfactual", summary="The answer without memories / without feedback learning / as plain RAG (novelty 4)")
+async def turn_counterfactual(turn_id: str, request: Request):
+    res = await engine(request).counterfactual(turn_id)
+    if res is None:
+        raise HTTPException(404, f"No answered turn with id {turn_id}")
+    return res
+
+
+@app.get("/api/research", summary="Learned intent weights, forgetting rates, trust, pending corrections, reminders, staleness, benchmark")
+async def research(request: Request, user: Optional[str] = None):
+    return engine(request).research(user)
+
+
+@app.get("/api/research/resolve", summary="What is believed for a slot, for a student / department / moment (novelty 1)")
+async def resolve(request: Request, slot: str, user: Optional[str] = None, scope: Optional[str] = None, as_of: Optional[int] = None):
+    return engine(request).resolve(slot, user, scope.upper() if scope else None, as_of)
+
+
+@app.post("/api/reminders/{rem_id}/dismiss", summary="Dismiss a reminder (novelty 11)")
+async def dismiss_reminder(rem_id: str, request: Request):
+    res = await engine(request).dismiss_reminder(rem_id)
+    if res is None:
+        raise HTTPException(404, f"No reminder with id {rem_id}")
+    return res
 
 
 __all__ = ["app", "Model"]
