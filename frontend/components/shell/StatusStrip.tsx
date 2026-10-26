@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Kbd } from "@/components/ui/Button";
 import { LogoMark } from "@/components/ui/Logo";
 import { NAV } from "./Rail";
+import { PresentationButton } from "./PresentationButton";
 import { DAY, HOUR } from "@/lib/engine/forget";
 import { cx, weekdayClock } from "@/lib/format";
 import { ease } from "@/lib/motion";
@@ -137,6 +138,7 @@ export function StatusStrip() {
       </p>
       <div className="ml-auto flex items-center gap-3">
         <StudentSwitcher />
+        <PresentationButton />
         <DemoClock />
         <span
           className={cx(
