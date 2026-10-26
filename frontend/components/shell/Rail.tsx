@@ -15,6 +15,7 @@ export const NAV: { href: string; label: string; glyph: GlyphName; key: string }
   { href: "/memory", label: "Memory", glyph: "memory", key: "M" },
   { href: "/retrieval", label: "Retrieval", glyph: "weights", key: "R" },
   { href: "/knowledge", label: "Knowledge", glyph: "document", key: "K" },
+  { href: "/research", label: "Research", glyph: "research", key: "E" },
 ];
 
 export function Rail() {

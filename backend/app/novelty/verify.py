@@ -151,7 +151,8 @@ def reporters_of(m: Memory) -> list[str]:
 
 
 def promote(world: World, m: Memory, now: int, by: str, detail: Optional[str] = None) -> list[ActivityEvent]:
-    """A pending correction is verified: it now replaces what it contradicted."""
+    """A pending correction is verified: it now replaces what it contradicted. Returns the
+    event; the caller records it (in a chat turn, the turn records all its events)."""
     if m.status != "pending":
         return []
     m.status = "current"
@@ -167,9 +168,7 @@ def promote(world: World, m: Memory, now: int, by: str, detail: Optional[str] = 
         m.shared = True
     reward(world, reporters_of(m))
     why = {"document": "a document states the same value", "crowd": f"{len(m.reporters or [])} students said the same", "moderator": "a moderator accepted it"}[by]
-    e = event("memory.verified", now, "Correction verified", detail or f"{m.text} — {why}", m.id)
-    world.events.append(e)
-    return [e]
+    return [event("memory.verified", now, "Correction verified", detail or f"{m.text} — {why}", m.id)]
 
 
 def reject(world: World, m: Memory, now: int, by: str, detail: Optional[str] = None) -> list[ActivityEvent]:
@@ -183,9 +182,7 @@ def reject(world: World, m: Memory, now: int, by: str, detail: Optional[str] = N
         m.verification.accepted = False
     penalise(world, reporters_of(m))
     why = "a document states a different value" if by == "document" else "a moderator rejected it"
-    e = event("memory.rejected", now, "Correction rejected", detail or f"{m.text} — {why}", m.id)
-    world.events.append(e)
-    return [e]
+    return [event("memory.rejected", now, "Correction rejected", detail or f"{m.text} — {why}", m.id)]
 
 
 def on_document_claim(world: World, slot: str, value: str, chunk_id: str, now: int, dept: Optional[str] = None) -> list[ActivityEvent]:

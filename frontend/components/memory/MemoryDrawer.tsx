@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { Pin, PinOff, Trash2, X, Archive } from "lucide-react";
+import { Pin, PinOff, Trash2, X, Archive, Check, Ban, RotateCcw } from "lucide-react";
 import { Glyph, CLASS_LABEL } from "@/components/ui/Glyph";
 import { Button } from "@/components/ui/Button";
 import { Meter } from "@/components/ui/motion-bits";
@@ -11,6 +11,7 @@ import { Palimpsest } from "@/components/ui/Palimpsest";
 import { ForgettingCurve } from "./ForgettingCurve";
 import { VersionChain } from "./VersionChain";
 import { useNow, useStore } from "@/lib/store";
+import { LIVE } from "@/lib/api/live";
 import { dayYear, relTime, untilText, cx } from "@/lib/format";
 import { statusAt } from "@/lib/engine/forget";
 import { docTitle } from "@/lib/engine/classify";
@@ -27,17 +28,60 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+const STATUS: Record<string, { label: string; glyph: "confirm" | "expired" | "outdated" | "flag"; tone: string }> = {
+  current: { label: "Current", glyph: "confirm", tone: "border-shelf text-foam" },
+  expired: { label: "Expired", glyph: "expired", tone: "border-shelf/60 text-kelp" },
+  outdated: { label: "Outdated", glyph: "outdated", tone: "border-shelf/60 text-kelp" },
+  pending: { label: "Unverified", glyph: "flag", tone: "border-sodium/50 text-sodium" },
+  archived: { label: "Archived", glyph: "expired", tone: "border-shelf/60 text-kelp" },
+};
+
 function StatusChip({ status }: { status: string }) {
+  const s = STATUS[status] ?? STATUS.current;
   return (
-    <span
-      className={cx(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11.5px]",
-        status === "current" ? "border-shelf text-foam" : "border-shelf/60 text-kelp",
-      )}
-    >
-      <Glyph name={status === "current" ? "confirm" : status === "expired" ? "expired" : "outdated"} size={12} />
-      {status === "current" ? "Current" : status === "expired" ? "Expired" : "Outdated"}
+    <span className={cx("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11.5px]", s.tone)}>
+      <Glyph name={s.glyph} size={12} />
+      {s.label}
     </span>
+  );
+}
+
+/** Why a correction was accepted or held back (backend novelty 3), with the moderator's buttons. */
+function VerificationBlock({ m, busy }: { m: Memory; busy: boolean }) {
+  const v = m.verification;
+  const verify = useStore((s) => s.verifyMemory);
+  if (!v) return null;
+  const resolved = v.resolvedBy
+    ? `${v.accepted ? "Verified" : "Rejected"} — ${v.resolvedBy === "document" ? "a document" : v.resolvedBy === "crowd" ? "other students" : "a moderator"} settled it`
+    : v.accepted
+      ? "Accepted when you said it"
+      : "Waiting for a document, another student or a moderator";
+  return (
+    <div className="mx-6 mt-2 rounded-[12px] border border-shelf bg-abyss/40 px-4 py-3">
+      <p className="flex items-center gap-2 text-[12.5px]">
+        <span className="label">Verification</span>
+        <span className="tnum ml-auto text-foam">
+          score {v.score.toFixed(2)} / needs {v.threshold.toFixed(2)}
+        </span>
+      </p>
+      <Meter value={v.score} tone={v.score >= v.threshold ? "var(--color-glacier)" : "var(--color-sodium)"} className="mt-2" />
+      <ul className="mt-2.5 space-y-1 text-[12.5px] text-kelp">
+        {v.reasons.map((r) => (
+          <li key={r}>· {r}</li>
+        ))}
+      </ul>
+      <p className="mt-2 text-[12.5px] text-foam">{resolved}</p>
+      {LIVE && m.status === "pending" && (
+        <div className="mt-3 flex gap-2">
+          <Button size="sm" disabled={busy} onClick={() => verify(m.id, true)}>
+            <Check size={14} /> Accept correction
+          </Button>
+          <Button size="sm" variant="ghost" disabled={busy} onClick={() => verify(m.id, false)}>
+            <Ban size={14} /> Reject
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -91,6 +135,8 @@ function MemoryBody({ m, world, now }: { m: Memory; world: World; now: number })
         )}
       </div>
 
+      <VerificationBlock m={m} busy={busy} />
+
       <dl className="grid grid-cols-2 gap-x-6 px-6">
         <Field label="Knowledge">{m.label}</Field>
         <Field label="Source">
@@ -123,6 +169,21 @@ function MemoryBody({ m, world, now }: { m: Memory; world: World; now: number })
         <Field label={m.expiresAt ? "Expires" : "Pinned"}>
           {m.expiresAt ? (st === "expired" ? `Expired ${relTime(m.expiredAt ?? m.expiresAt, now)}` : untilText(m.expiresAt, now)) : m.pinned ? "Yes — never fades" : "No"}
         </Field>
+        {(m.appliesTo || m.validFrom !== undefined) && (
+          <>
+            <Field label="Applies to">{m.appliesTo ? `${m.appliesTo} students only` : "Everyone"}</Field>
+            <Field label="True from">
+              <span className="tnum">{dayYear(m.validFrom ?? m.createdAt)}</span>
+              {m.validTo && <span className="text-kelp"> until {dayYear(m.validTo)}</span>}
+            </Field>
+          </>
+        )}
+        {(m.reporters?.length || m.shared) && (
+          <Field label="Who it's for">
+            {m.shared ? "Shared with every student it applies to" : "Only the student who said it"}
+            {m.reporters?.length ? <span className="block text-[12px] text-kelp">Said by {m.reporters.join(", ")}</span> : null}
+          </Field>
+        )}
       </dl>
 
       <div className="px-6 pt-6">
@@ -144,6 +205,11 @@ function MemoryBody({ m, world, now }: { m: Memory; world: World; now: number })
         <Button size="sm" onClick={() => outdate(m.id)} disabled={busy || st !== "current"}>
           <Archive size={14} /> Mark outdated
         </Button>
+        {LIVE && st === "archived" && !m.mergedInto && !m.verification?.resolvedBy && (
+          <Button size="sm" onClick={() => useStore.getState().restore(m.id)} disabled={busy}>
+            <RotateCcw size={14} /> Restore
+          </Button>
+        )}
         {confirming ? (
           <span className="ml-auto flex items-center gap-2">
             <span className="text-[12.5px] text-kelp">Delete for good?</span>

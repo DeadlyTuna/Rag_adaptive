@@ -9,7 +9,15 @@ export const LazyTerrain = dynamic(() => import("./Terrain"), {
   loading: () => <div className="h-full w-full animate-pulse rounded-[inherit] bg-trench/40" />,
 });
 
-export function TerrainLegend({ className }: { className?: string }) {
+export function TerrainLegend({ className, palette = "source" }: { className?: string; palette?: "source" | "staleness" }) {
+  if (palette === "staleness")
+    return (
+      <div className={cx("flex items-center gap-2 text-[11px] text-kelp", className)} aria-label="Map colour scale: fresh to stale">
+        <span>Fresh</span>
+        <span className="h-[6px] w-20 rounded-full" style={{ background: "linear-gradient(90deg, #5fd0b8, #e6f2ee, #ff8a5c)" }} />
+        <span>Stale — old, overridden, distrusted or fading</span>
+      </div>
+    );
   return (
     <div className={cx("flex items-center gap-2 text-[11px] text-kelp", className)} aria-label="Map colour scale: documents to learned memory">
       <span>Documents</span>

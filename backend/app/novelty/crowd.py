@@ -54,9 +54,7 @@ def corroborate(world: World, text: str, cls: Classification, user: str, applies
             events += promote(world, match, now, "crowd", f"{match.text} — confirmed by {n} students, now shared with everyone{scope}")
         else:
             match.shared = True
-            e = event("memory.verified", now, "Shared by the crowd", f"{match.text} — confirmed by {n} students, now shared with everyone{scope}", match.id)
-            world.events.append(e)
-            events.append(e)
+            events.append(event("memory.verified", now, "Shared by the crowd", f"{match.text} — confirmed by {n} students, now shared with everyone{scope}", match.id))
         detail = f"{n} students have now said this — shared with everyone{scope}"
     else:
         detail = f"{n} of {CROWD_K} students needed before it is shared"

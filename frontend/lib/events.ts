@@ -15,4 +15,13 @@ export const EVENT_GLYPH: Record<EventType, { glyph: GlyphName; tone: string; si
   "weights.updated": { glyph: "weights", tone: "text-foam", sign: "⚖" },
   "document.indexed": { glyph: "document", tone: "text-glacier", sign: "+" },
   "document.conflict": { glyph: "correction", tone: "text-sodium", sign: "↻" },
+  "memory.quarantined": { glyph: "flag", tone: "text-sodium", sign: "?" },
+  "memory.verified": { glyph: "confirm", tone: "text-glacier", sign: "✓" },
+  "memory.rejected": { glyph: "outdated", tone: "text-flare", sign: "×" },
+  "memory.corroborated": { glyph: "confirm", tone: "text-rhodamine", sign: "+1" },
+  "memory.merged": { glyph: "memory", tone: "text-foam", sign: "⇢" },
+  "memory.archived": { glyph: "expired", tone: "text-kelp", sign: "↓" },
+  "memory.scheduled": { glyph: "temporary", tone: "text-sodium", sign: "⏱" },
+  "trust.propagated": { glyph: "flag", tone: "text-flare", sign: "≈" },
+  "reminder.due": { glyph: "temporary", tone: "text-sodium", sign: "!" },
 };

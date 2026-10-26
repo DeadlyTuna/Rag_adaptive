@@ -11,6 +11,7 @@ import type {
   Memory,
   MemoryClass,
   MemoryOp,
+  Reminder,
   Retrieval,
   Turn,
   Weights,
@@ -73,6 +74,77 @@ export interface ClassifierEval {
   misses: { text: string; expected: MemoryClass; got: MemoryClass }[];
 }
 
+/** GET /api/turns/{id}/counterfactual — the same question answered with parts of the learning removed. */
+export interface Counterfactual {
+  question: string;
+  turnId: string;
+  recorded: { text: string; model?: string; intent?: string };
+  variants: Record<
+    "adaptive" | "no_memory" | "no_feedback" | "plain",
+    {
+      label: string;
+      text: string;
+      intent: string;
+      sameAsAdaptive: boolean;
+      citations: { n: number; itemId: string; title: string; kind: "document" | "memory" }[];
+      top: { id: string; title: string; kind: "document" | "memory"; score: number }[];
+      weights: Weights;
+    }
+  >;
+  memoriesUsed: { n: number; itemId: string; title: string }[];
+  lowerReliability: { id: string; reliability: number }[];
+}
+
+type Cell = { correct: number; total: number; rate: number };
+export interface BenchmarkSummary {
+  embedder: string;
+  seconds: number;
+  main: Record<string, Record<string, Cell>>;
+  ablations: Record<string, Record<string, Cell>>;
+  calibration?: { answers: number; meanConfidenceRight: number | null; meanConfidenceWrong: number | null; auroc: number | null };
+  experiments?: {
+    ranking: Record<string, { mrr: number; "hit@1": number } | string>;
+    forgetting: {
+      trueMeanGapDays: Record<string, number>;
+      handSetTauDays: Record<string, number>;
+      learnedTauDays: Record<string, number>;
+      heldoutLogLik: Record<string, number>;
+      _about: string;
+    };
+    consolidation: Record<string, { currentMemoriesBefore: number; currentMemoriesAfter: number; merged: number; copiesOfTheAnswerInTop5: number } | string>;
+    propagation: { feedback: string; reliabilityChanged: Record<string, [number, number]> };
+    counterfactual: { questions: number; answersThatChangeWithout: Record<string, number> };
+    staleness: { overriddenPassages: number; lowReliabilityPassages: number; otherPassages: number; counts: number[] };
+    reminders: { cases: { statement: string; saidAtHour: number; expected: number; scheduled: number; fired: number }[]; _about: string };
+  };
+}
+
+/** GET /api/research — everything the Research page shows. */
+export interface Research {
+  novelties: string[];
+  available: string[];
+  globalWeights: Weights;
+  intentWeights: Record<string, { label: string; feedback: number; groupShare: number; effective: Weights; own: Weights | null }>;
+  shrinkageK: number;
+  decay: Record<string, { tau: number; prior: number; events: number; exposure: number; memories: number }>;
+  decayInUse: boolean;
+  trust: Record<string, { name: string; department?: string; alpha: number; beta: number; mean: number }>;
+  verification: { threshold: number; crowdK: number };
+  pending: Memory[];
+  reminders: Reminder[];
+  staleness: { id: string; kind: "document" | "memory"; staleness: number; reasons: string[] }[];
+  benchmark: BenchmarkSummary | null;
+  now: number;
+}
+
+export interface Resolved {
+  slot: string;
+  value: string | null;
+  source: { kind: "memory" | "document"; id: string; label: string; appliesTo?: string; validFrom: number } | null;
+  memories: { id: string; value?: string; status: string; appliesTo?: string; validFrom: number; validTo?: number; learnedAt: number; visible: boolean }[];
+  claims: { id: string; value: string; scope?: string; validFrom: number; label: string }[];
+}
+
 export interface Health {
   status: string;
   answers: string; // model id, or "template"
@@ -109,14 +181,20 @@ const json = <T>(path: string, method: string, body?: unknown) =>
 /** POST /api/chat → Server-Sent Events, one JSON `ChatEvent` per `data:` line. */
 export async function streamChat(
   message: string,
-  ids: { sessionId: string; userTurnId: string; assistantTurnId: string },
+  ids: { sessionId: string; userTurnId: string; assistantTurnId: string; userId?: string | null },
   onEvent: (e: ChatEvent) => void,
   signal?: AbortSignal,
 ) {
   const res = await fetch(`${API_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
-    body: JSON.stringify({ message, session_id: ids.sessionId, user_turn_id: ids.userTurnId, assistant_turn_id: ids.assistantTurnId }),
+    body: JSON.stringify({
+      message,
+      session_id: ids.sessionId,
+      user_turn_id: ids.userTurnId,
+      assistant_turn_id: ids.assistantTurnId,
+      ...(ids.userId ? { user_id: ids.userId } : {}),
+    }),
     signal,
   });
   if (!res.ok || !res.body) throw new Error(`POST /api/chat failed with ${res.status}`);
@@ -141,13 +219,16 @@ export async function streamChat(
   }
 }
 
+const userQuery = (user?: string | null) => (user ? `?user=${encodeURIComponent(user)}` : "");
+
 export const live = {
-  state: () => request<ServerWorld>("/api/state"),
+  state: (user?: string | null) => request<ServerWorld>(`/api/state${userQuery(user)}`),
   health: () => request<Health>("/api/health"),
   reset: () => json<ServerWorld>("/api/reset", "POST"),
   feedback: (body: { turn_id: string; verdict: Feedback["verdict"]; reason?: Feedback["reason"]; target_id?: string }) =>
     json<FeedbackResult>("/api/feedback", "POST", body),
-  patchMemory: (id: string, body: { pinned?: boolean; status?: "outdated" }) => json<Memory>(`/api/memories/${encodeURIComponent(id)}`, "PATCH", body),
+  patchMemory: (id: string, body: { pinned?: boolean; status?: "outdated" | "current" }) =>
+    json<Memory>(`/api/memories/${encodeURIComponent(id)}`, "PATCH", body),
   deleteMemory: (id: string) => json<void>(`/api/memories/${encodeURIComponent(id)}`, "DELETE"),
   weights: (w: Weights, label?: string) => json<Weights>("/api/weights", "PUT", { ...w, label }),
   clock: (advance_ms: number) => json<ClockResult>("/api/clock", "POST", { advance_ms }),
@@ -156,6 +237,20 @@ export const live = {
   classify: (text: string, predictor?: "rules" | "ml" | "llm") => json<Classification>("/api/classify", "POST", { text, predictor }),
   classifierEval: (predictor: "rules" | "ml") => request<ClassifierEval>(`/api/classifier/eval?predictor=${predictor}`),
   ingestSample: () => json<IngestResult>("/api/documents/sample", "POST"),
+  // research extensions
+  research: (user?: string | null) => request<Research>(`/api/research${userQuery(user)}`),
+  counterfactual: (turnId: string) => request<Counterfactual>(`/api/turns/${encodeURIComponent(turnId)}/counterfactual`),
+  verify: (id: string, accept: boolean) =>
+    json<{ memory: Memory; events: ActivityEvent[] }>(`/api/memories/${encodeURIComponent(id)}/verify`, "POST", { accept }),
+  consolidate: () => json<{ events: ActivityEvent[]; memories: Memory[] }>("/api/memories/consolidate", "POST"),
+  dismissReminder: (id: string) => json<Reminder>(`/api/reminders/${encodeURIComponent(id)}/dismiss`, "POST"),
+  resolve: (slot: string, opts: { user?: string | null; scope?: string; asOf?: number } = {}) => {
+    const q = new URLSearchParams({ slot });
+    if (opts.user) q.set("user", opts.user);
+    if (opts.scope) q.set("scope", opts.scope);
+    if (opts.asOf !== undefined) q.set("as_of", String(Math.round(opts.asOf)));
+    return request<Resolved>(`/api/research/resolve?${q}`);
+  },
   upload: (file: File) => {
     const body = new FormData();
     body.append("file", file);

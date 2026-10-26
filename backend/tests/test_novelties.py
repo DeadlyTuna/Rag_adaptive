@@ -319,6 +319,19 @@ def test_a_private_correction_needs_the_crowd_before_it_is_shared(make_engine):
     assert "80%" not in say(eng, "What is the minimum attendance requirement?", "priya")["text"]  # ECE
 
 
+def test_every_event_is_recorded_once(make_engine):
+    eng = make_engine(novelties=ALL)
+    say(eng, "Our department changed the attendance requirement to 80%.", "harsh")
+    say(eng, "Our department changed the attendance requirement to 80%.", "arjun")  # crowd-verified inside a turn
+    say(eng, "The minimum attendance requirement is 5%.", "priya")
+    run(eng.verify_memory(attendance_rules(eng)[-1].id, accept=False))
+    say(eng, "The pass mark is 10 marks.")
+    run(eng.ingest_sample())
+    ids = [e.id for e in eng.world.events]
+    assert len(ids) == len(set(ids))
+    assert {"memory.verified", "memory.corroborated", "memory.rejected"} <= {e.type for e in eng.world.events}
+
+
 def test_a_private_correction_never_outdates_a_shared_fact(make_engine):
     eng = make_engine(novelties=ALL)
     run(eng.ingest_sample())  # CSE circular: 80% for CSE, shared

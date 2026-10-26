@@ -2,7 +2,7 @@
 
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { useDeferredValue, useMemo, useState } from "react";
-import { History } from "lucide-react";
+import { History, Combine } from "lucide-react";
 import { Panel, Empty } from "@/components/ui/Panel";
 import { Segmented } from "@/components/ui/Segmented";
 import { NumberTicker } from "@/components/ui/motion-bits";
@@ -14,7 +14,8 @@ import { MemoryCard } from "./MemoryCard";
 import { ActivityFeed } from "./ActivityFeed";
 import { VersionChain } from "./VersionChain";
 import { DAY, statusAt } from "@/lib/engine/forget";
-import { eventsAt, statSeries, statsAt, terrainItems, versionChains, type Stats } from "@/lib/selectors";
+import { eventsAt, stalenessItems, statSeries, statsAt, terrainItems, versionChains, type Stats } from "@/lib/selectors";
+import { LIVE } from "@/lib/api/live";
 import { day, relTime } from "@/lib/format";
 import { useHydrated, useNow, useStore } from "@/lib/store";
 
@@ -53,6 +54,9 @@ export function MemoryView() {
   const now = useNow(15_000);
   const [asOf, setAsOf] = useState<number | null>(null);
   const [mode, setMode] = useState<"relief" | "flat">("relief");
+  const [palette, setPalette] = useState<"source" | "staleness">("source");
+  const [consolidating, setConsolidating] = useState<string | null>(null);
+  const canConsolidate = LIVE && !!world.novelties?.includes("consolidate");
   const [type, setType] = useState<TypeFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("current");
 
@@ -60,7 +64,7 @@ export function MemoryView() {
   const slowT = useDeferredValue(t);
   const start = useMemo(() => Math.min(world.seededAt - 45 * DAY, ...world.events.map((e) => e.at)), [world]);
 
-  const items = useMemo(() => terrainItems(world, t), [world, t]);
+  const items = useMemo(() => (palette === "staleness" ? stalenessItems(world, t) : terrainItems(world, t)), [world, t, palette]);
   const stats = useMemo(() => statsAt(world, slowT), [world, slowT]);
   const prev = useMemo(() => statsAt(world, slowT - DAY), [world, slowT]);
   const series = useMemo(() => statSeries(world, slowT), [world, slowT]);
@@ -89,8 +93,8 @@ export function MemoryView() {
       })
       .filter((m) => {
         const st = statusAt(m, slowT);
-        if (status === "current") return st === "current";
-        if (status === "history") return st === "outdated" || st === "expired";
+        if (status === "current") return st === "current" || st === "pending";
+        if (status === "history") return st === "outdated" || st === "expired" || st === "archived";
         return true;
       })
       .sort((a, b) => b.createdAt - a.createdAt);
@@ -145,22 +149,35 @@ export function MemoryView() {
         <Panel
           title="Knowledge terrain"
           meta={
-            <Segmented
-              label="Map view"
-              size="sm"
-              value={mode}
-              onChange={setMode}
-              options={[
-                { value: "relief", label: "3-D relief" },
-                { value: "flat", label: "2-D map" },
-              ]}
-            />
+            <span className="flex flex-wrap items-center gap-2">
+              <Segmented
+                label="Map colour"
+                size="sm"
+                value={palette}
+                onChange={setPalette}
+                options={[
+                  { value: "source", label: "Source" },
+                  { value: "staleness", label: "Staleness" },
+                ]}
+              />
+              <Segmented
+                label="Map view"
+                size="sm"
+                value={mode}
+                onChange={setMode}
+                options={[
+                  { value: "relief", label: "3-D relief" },
+                  { value: "flat", label: "2-D map" },
+                ]}
+              />
+            </span>
           }
         >
           <div className="relative">
             <LazyTerrain
               items={items}
               mode={mode}
+              palette={palette}
               pulse={pulse}
               hoverId={hoverId}
               forcedLabels={recent}
@@ -170,8 +187,10 @@ export function MemoryView() {
               className="h-[clamp(320px,52vh,560px)]"
             />
             <div className="pointer-events-none absolute inset-x-4 bottom-3 flex flex-wrap items-end justify-between gap-2">
-              <TerrainLegend />
-              <p className="text-[11px] text-kelp">Height = how strongly it’s held · click a peak to inspect it</p>
+              <TerrainLegend palette={palette} />
+              <p className="text-[11px] text-kelp">
+                {palette === "staleness" ? "Warm, raised = stale" : "Height = how strongly it’s held"} · click a peak to inspect it
+              </p>
             </div>
           </div>
         </Panel>
@@ -185,7 +204,26 @@ export function MemoryView() {
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_440px]">
         <Panel
           title="Memory bank"
-          meta={<span className="data text-kelp">{bank.length} shown</span>}
+          meta={
+            <span className="flex items-center gap-3">
+              {canConsolidate && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  title="Merge memories that say the same thing and archive ones that have faded"
+                  onClick={async () => {
+                    setConsolidating("…");
+                    const n = await useStore.getState().consolidate();
+                    setConsolidating(n ? `${n} change${n > 1 ? "s" : ""}` : "Nothing to tidy");
+                    setTimeout(() => setConsolidating(null), 3000);
+                  }}
+                >
+                  <Combine size={14} /> {consolidating ?? "Consolidate"}
+                </Button>
+              )}
+              <span className="data text-kelp">{bank.length} shown</span>
+            </span>
+          }
           bodyClassName="p-4"
         >
           <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -209,7 +247,7 @@ export function MemoryView() {
               onChange={setStatus}
               options={[
                 { value: "current", label: "Current" },
-                { value: "history", label: "Replaced & expired" },
+                { value: "history", label: "Replaced, expired & archived" },
                 { value: "all", label: "Everything" },
               ]}
             />

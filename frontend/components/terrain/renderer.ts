@@ -105,6 +105,12 @@ function clonePose(p: Pose): Pose {
   return { ...p, pos: p.pos.clone(), target: p.target.clone(), up: p.up.clone() };
 }
 
+export type TerrainPalette = "source" | "staleness";
+const PALETTES: Record<TerrainPalette, [string, string, string]> = {
+  source: ["#8fcbff", "#e6f2ee", "#ff6b93"],
+  staleness: ["#5fd0b8", "#e6f2ee", "#ff8a5c"],
+};
+
 export class TerrainRenderer {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
@@ -226,6 +232,17 @@ export class TerrainRenderer {
   }
 
   // ------------------------------------------------------------------ inputs
+
+  /** Colour the map by source (documents → memories) or by staleness (fresh → stale);
+   * either way an item's `mem` value in [0, 1] picks the colour. */
+  setPalette(palette: TerrainPalette) {
+    const p = PALETTES[palette];
+    const u = this.material.uniforms;
+    u.uDoc.value = hex(p[0]);
+    u.uNeutral.value = hex(p[1]);
+    u.uMem.value = hex(p[2]);
+    this.kick();
+  }
 
   setItems(items: TItem[], instant = false) {
     const seen = new Set<string>();

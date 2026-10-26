@@ -5,6 +5,7 @@ import { DAY } from "./engine/forget";
 import { statusAt, strengthAt } from "./engine/forget";
 import { docTitle } from "./engine/classify";
 import { shortDoc } from "./engine/retrieve";
+import { chunkStaleness, memoryStaleness } from "./engine/staleness";
 
 export interface TerrainItem {
   id: string;
@@ -75,6 +76,21 @@ export function terrainItems(world: World, t: number): TerrainItem[] {
     });
   }
   return out;
+}
+
+/** The same map coloured by staleness instead of by source (0 fresh … 1 stale). Stale
+ * things are also raised (and replaced memories, flat on the normal map, get a low bump)
+ * so the warm regions stand out instead of averaging away into their fresh neighbours. */
+export function stalenessItems(world: World, t: number): TerrainItem[] {
+  const chunks = new Map(world.chunks.map((c) => [c.id, c]));
+  const mems = new Map(world.memories.map((m) => [m.id, m]));
+  return terrainItems(world, t).map((it) => {
+    const c = chunks.get(it.id);
+    const m = c ? undefined : mems.get(it.id);
+    const s = c ? chunkStaleness(c, t) : m ? memoryStaleness(m, t) : 0;
+    const inactive = !!m && it.w === 0 && statusAt(m, t) !== "future";
+    return { ...it, mem: s, w: inactive ? 0.32 : it.w * (0.45 + 0.9 * s) };
+  });
 }
 
 // ------------------------------------------------------------------ stats

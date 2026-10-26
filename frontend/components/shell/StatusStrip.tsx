@@ -92,6 +92,35 @@ function DemoClock() {
   );
 }
 
+/** Live mode with the multi-student extension: who is talking. Each student has their own
+ * conversation and private memories; shared facts are visible to everyone they apply to. */
+function StudentSwitcher() {
+  const users = useStore((s) => s.world.users);
+  const multi = useStore((s) => !!s.world.novelties?.includes("multi_user"));
+  const student = useStore((s) => s.student);
+  const setStudent = useStore((s) => s.setStudent);
+  const busy = useStore((s) => !!s.pending);
+  if (!LIVE || !multi || !users?.length) return null;
+  return (
+    <label className="flex items-center gap-2 text-[12px] text-kelp" title="Switch student: each has their own conversation and private memories">
+      <span className="label hidden xl:inline">Student</span>
+      <select
+        value={student ?? users[0].id}
+        disabled={busy}
+        onChange={(e) => setStudent(e.target.value)}
+        className="h-8 rounded-[9px] border border-shelf bg-trench/70 px-2 text-[12.5px] text-foam outline-none transition-colors hover:border-kelp/50 focus-visible:border-kelp disabled:opacity-50"
+      >
+        {users.map((u) => (
+          <option key={u.id} value={u.id}>
+            {u.name}
+            {u.department ? ` · ${u.department}` : " · no department"}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function StatusStrip() {
   const path = usePathname();
   const page = NAV.find((n) => path?.startsWith(n.href));
@@ -107,6 +136,7 @@ export function StatusStrip() {
         Adaptive RAG <span className="text-shelf">/</span> <span className="text-foam">{page?.label ?? ""}</span>
       </p>
       <div className="ml-auto flex items-center gap-3">
+        <StudentSwitcher />
         <DemoClock />
         <span
           className={cx(

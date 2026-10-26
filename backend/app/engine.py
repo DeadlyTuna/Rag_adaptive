@@ -753,7 +753,9 @@ class Engine:
                                 m.applies_to = m.applies_to or scoped
                     if self.s.has("verify") or self.s.has("multi_user"):
                         # settle pending corrections; share (and credit) the facts it confirms
-                        events += verify.on_document_claim(self.world, claim.slot, claim.value, c.id, now + 2, scoped)
+                        settled = verify.on_document_claim(self.world, claim.slot, claim.value, c.id, now + 2, scoped)
+                        self.world.events.extend(settled)
+                        events += settled
         self.sync_index()
         self.save()
         meta = next((d for d in self.world.documents if d.id == doc.id), None)
@@ -834,6 +836,7 @@ class Engine:
                 raise ValueError("Only a correction that is waiting for verification can be accepted or rejected.")
             now = self.now()
             events = verify.promote(self.world, m, now, "moderator") if accept else verify.reject(self.world, m, now, "moderator")
+            self.world.events.extend(events)
             self.sync_index()
             self.save()
             return {"memory": m.dump(), "events": [e.dump() for e in events]}

@@ -276,6 +276,12 @@ def main() -> None:
         return
     suffix = "" if args.embedder == "hash" else f"-{args.embedder}"
     (HERE / f"results{suffix}.json").write_text(json.dumps(results, indent=1, ensure_ascii=False), encoding="utf-8")
+    web = HERE.parent.parent / "frontend" / "lib" / "research"
+    if not suffix and web.parent.exists():
+        # the Research page shows these even when no backend is connected
+        web.mkdir(exist_ok=True)
+        summary = {k: v for k, v in results.items() if k != "probes"}
+        (web / "benchmark.json").write_text(json.dumps(summary, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     (HERE / f"RESULTS{suffix}.md").write_text(markdown(results), encoding="utf-8")
     print(f"wrote bench/results{suffix}.json and bench/RESULTS{suffix}.md in {results['seconds']} s")
 
