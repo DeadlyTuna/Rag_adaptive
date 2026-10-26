@@ -38,6 +38,7 @@ def make_settings(tmp: Path, **over) -> Settings:
     s.classifier = "rules"
     s.answer_mode = "template"
     s.pacing = 0.0
+    s.novelties = frozenset()  # the core pipeline; novelty tests switch theirs on explicitly
     for k, v in over.items():
         setattr(s, k, v)
     return s

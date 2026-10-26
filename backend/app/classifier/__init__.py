@@ -69,10 +69,18 @@ def current_for_slot(world: World, slot: str):
     m = world.current_memory(slot)
     if m:
         return ("memory", m)
+    found = []
     for c in world.chunks:
         claim = next((cl for cl in c.claims if cl.slot == slot), None)
-        if claim and not (c.overridden_by or {}).get(slot):
-            return ("chunk", c, claim.value)
+        if claim and world.claim_applies(c, claim) and not world.override_of(c, slot):
+            if not (world.view and world.view.scoped):
+                return ("chunk", c, claim.value)
+            found.append((c, claim))
+    if found:
+        # scope- and time-aware (novelty 1): a department's own rule beats the general one,
+        # then the most recently published passage wins
+        c, claim = max(found, key=lambda x: (x[1].scope is not None, x[0].published_at))
+        return ("chunk", c, claim.value)
     return None
 
 

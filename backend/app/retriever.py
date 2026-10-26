@@ -70,9 +70,8 @@ def chunk_candidate(world: World, c: Chunk, s: float, now: int, topic_slot: Opti
         I=r3(c.importance),
     )
     note = None
-    overridden = list((c.overridden_by or {}).items())
-    for slot, mem_id in overridden:
-        m = world.memory(mem_id)
+    overridden = world.overrides(c)
+    for slot, m in overridden:
         if m and (not topic_slot or topic_slot == slot or len(overridden) == 1):
             who = "your correction" if m.source.type == "user" else m.source.label
             note = f"Overridden for {m.label.lower()} → {m.value or m.text} ({who})"
@@ -142,6 +141,14 @@ class Retriever:
             return memory_candidate(m, self.sim(q, m.id, memory_text(m)), now)
         return None
 
+    def _stage1(self, world: World) -> tuple[str, int]:
+        """Which part of the index to search, and how deep. With a view (novelties 1 and 8)
+        other students' private memories and facts that weren't true at the asked-about
+        time are filtered after the search, so search everything and keep the first POOL."""
+        if world.view is None:
+            return "live", POOL
+        return "all", self.store.count()
+
     # -- the two-stage search ---------------------------------------------------
     def retrieve(self, world: World, query: str, weights: Weights, now: int) -> Retrieval:
         topic = detect_topic(query)
@@ -150,7 +157,8 @@ class Retriever:
 
         # Stage 1 — semantic: nearest neighbours in the vector store
         pool: list[Candidate] = []
-        for item_id, cos in self.store.search(q, POOL, "live"):
+        scope, n = self._stage1(world)
+        for item_id, cos in self.store.search(q, n, scope):
             s = r3(self.embedder.calibrate(cos))
             if s < SIM_FLOOR:
                 continue
@@ -159,8 +167,10 @@ class Retriever:
                 pool.append(chunk_candidate(world, c, s, now, topic_slot))
                 continue
             m = world.memory(item_id)
-            if m and m.status == "current" and m.kind != "preference":
+            if m and world.live(m) and m.kind != "preference":
                 pool.append(memory_candidate(m, s, now))
+            if len(pool) == POOL:
+                break
         pool.sort(key=lambda c: -c.factors.S)
 
         # Stage 2 — re-rank on all four signals
@@ -172,29 +182,35 @@ class Retriever:
 
         # Relevant but filtered out: outdated / expired memories
         excluded: list[Candidate] = []
-        for item_id, cos in self.store.search(q, 10, "inactive"):
+        for item_id, cos in self.store.search(q, 10 if world.view is None else self.store.count(), "inactive" if world.view is None else "all"):
             m = world.memory(item_id)
-            if not m or m.status == "current":
+            if not m or world.live(m) or (world.view is not None and not world.applies(m)):
                 continue
             c = memory_candidate(m, r3(self.embedder.calibrate(cos)), now)
             c.score = r3(score_of(c.factors, weights))
             if m.status == "outdated":
                 by = world.memory(m.superseded_by) if m.superseded_by else None
                 c.excluded = f"Replaced by “{by.text}”" if by else "Marked outdated"
+            elif m.status == "pending":
+                c.excluded = "Unverified — held until a document or another student confirms it"
+            elif m.status == "archived":
+                c.excluded = "Merged into another memory" if m.merged_into else "Archived — rejected or faded from use"
+            elif m.status == "current":
+                c.excluded = "Not true yet at that time" if world.view and world.view.as_of is not None else "Scheduled — not in effect yet"
             else:
                 c.excluded = "Expired — it was only relevant for a short time"
             if c.factors.S >= EXCLUDED_FLOOR:
                 excluded.append(c)
         excluded = sorted(excluded, key=lambda c: -c.factors.S)[:3]
 
-        preferences = [Preference(id=m.id, text=m.text) for m in world.memories if m.status == "current" and m.kind == "preference"]
+        preferences = [Preference(id=m.id, text=m.text) for m in world.memories if m.kind == "preference" and world.live(m)]
 
         return Retrieval(
             query=query,
             candidates=ranked,
             excluded=excluded,
             weights=weights.model_copy(),
-            searched=Searched(chunks=len(world.chunks), memories=sum(1 for m in world.memories if m.status == "current")),
+            searched=Searched(chunks=len(world.chunks), memories=sum(1 for m in world.memories if world.live(m))),
             pool=len(pool),
             preferences=preferences,
             ping=ping_for(world, ranked),
@@ -206,7 +222,7 @@ class Retriever:
         topic_slot = topic.slot if topic else None
         q = self.query_vector(query)
         items: list[Candidate] = []
-        for item_id, cos in self.store.search(q, self.store.count(), "live"):
+        for item_id, cos in self.store.search(q, self.store.count(), self._stage1(world)[0]):
             s = r3(self.embedder.calibrate(cos))
             if s < SIM_FLOOR:
                 continue
@@ -214,7 +230,7 @@ class Retriever:
             m = None if c else world.memory(item_id)
             if c:
                 items.append(chunk_candidate(world, c, s, now, topic_slot))
-            elif m and m.status == "current" and m.kind != "preference":
+            elif m and world.live(m) and m.kind != "preference":
                 items.append(memory_candidate(m, s, now))
         for it in items:
             it.score = r3(score_of(it.factors, weights))

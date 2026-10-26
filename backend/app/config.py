@@ -26,6 +26,38 @@ def _float(name: str, default: float) -> float:
         return default
 
 
+# Research extensions on top of the core pipeline (see app/novelty/). NOVELTIES=all turns
+# every one on, "none" turns them off, a list picks some ("scope_time,verify"), and
+# "all,-verify" is everything but one (what the benchmark's ablations use).
+NOVELTY_NAMES: tuple[str, ...] = (
+    "scope_time",  # 1  facts carry a scope (department) and a validity interval
+    "intent_weights",  # 2  ranking weights learned per question type, shrunk to the global ones
+    "verify",  # 3  corrections that contradict a reliable document are held for verification
+    "learned_decay",  # 5  forgetting time constants fitted from how memories actually get reused
+    "answerability",  # 6  answer confidence; ask a clarifying question or abstain when unsure
+    "consolidate",  # 7  merge near-duplicate memories, archive faded ones
+    "multi_user",  # 8  private memories per student; facts shared once enough students confirm
+    "propagation",  # 9  feedback on a passage nudges the reliability of its near neighbours
+    "reminders",  # 11 reminders scheduled from temporary memories
+)
+
+
+def parse_novelties(raw: str) -> frozenset[str]:
+    out: set[str] = set()
+    for tok in raw.split(","):
+        tok = tok.strip().lower()
+        drop = tok.startswith("-")
+        name = tok.lstrip("-").replace("-", "_")
+        if name in ("all", "*"):
+            out = set() if drop else out | set(NOVELTY_NAMES)
+        elif name in NOVELTY_NAMES:
+            if drop:
+                out.discard(name)
+            else:
+                out.add(name)
+    return frozenset(out)
+
+
 @dataclass
 class Settings:
     # where the SQLite database and the Chroma index live
@@ -57,9 +89,14 @@ class Settings:
     # 1.0 = the same stage timing as the frontend's demo, 0 = as fast as possible
     pacing: float = field(default_factory=lambda: _float("PIPELINE_PACING", 0.6))
 
+    novelties: frozenset[str] = field(default_factory=lambda: parse_novelties(_env("NOVELTIES", "all")))
+
     cors_origins: list[str] = field(
         default_factory=lambda: [o.strip() for o in _env("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if o.strip()]
     )
+
+    def has(self, novelty: str) -> bool:
+        return novelty in self.novelties
 
     @property
     def db_path(self) -> Path:
